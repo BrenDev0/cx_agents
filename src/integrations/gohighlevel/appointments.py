@@ -52,10 +52,10 @@ class AppointmentsClient:
         start_time: str
     ):
         body = {
-        "calendarId": calendar_id,
-        "locationId": location_id,
-        "contactId": contact_id,
-        "startTime": start_time   
+            "calendarId": calendar_id,
+            "locationId": location_id,
+            "contactId": contact_id,
+            "startTime": start_time   
         }
 
         response = await self.http.post(
