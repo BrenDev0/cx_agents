@@ -25,11 +25,11 @@ class AppointmentsClient:
         end_date: int,
         timezone: str
     ):
-        query_params = [
-            ("startDate", start_date),
-            ("endDate", end_date),
-            ("timeZone", timezone)
-        ]
+        query_params = {
+            "startDate": start_date,
+            "endDate": end_date,
+            "timeZone": timezone
+        }
         
         response = await self.http.get(
             url=f"/calendars/{calendar_id}/free-slots",

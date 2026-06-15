@@ -1,5 +1,6 @@
 from httpx import AsyncClient
 from .appointments import AppointmentsClient
+from .conversations import ConversationsClient
 
 class GoHighLevelClient:
     def __int__(
@@ -15,3 +16,4 @@ class GoHighLevelClient:
         )
 
         self.appointments = AppointmentsClient(http=self.http)
+        self.conversations = ConversationsClient(http=self.http)
