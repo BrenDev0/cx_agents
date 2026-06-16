@@ -1,4 +1,4 @@
-from typing import TypedDict, Any, NotRequired
+from typing import TypedDict, NotRequired
 from enum import StrEnum
 
 class MessageRole(StrEnum):
@@ -11,15 +11,19 @@ class ChatMessage(TypedDict):
     role: MessageRole
     content: str
 
-class ChatState(TypedDict):
+class BaseState(TypedDict):
     contact_id: str
     llm_provider: str
     llm_model: str
     api_key: str
-    incomming_message: str
+    incoming_message: str
     chat_history: NotRequired[list[ChatMessage]]
+    errors: NotRequired[list[str]]
+
+
+class ChatState(BaseState):
     intent: NotRequired[str]
     final_response: NotRequired[str]
-    errors: NotRequired[list[str]]
+    
     
 

@@ -35,7 +35,7 @@ def chat_workflow():
         for msg in state.get("chat_history", []):
             messages.append(msg)
 
-        messages.append(ChatMessage(role=MessageRole.HUMAN, content=state["incomming_message"]))
+        messages.append(ChatMessage(role=MessageRole.HUMAN, content=state["incoming_message"]))
 
         try:
             response = await llm.ainvoke(messages)
@@ -72,9 +72,7 @@ def chat_workflow():
 
     async def rag_workflow(state: ChatState):
         rag_state = RagState(
-            contact_id=state["contact_id"],
-            user_input=state["incomming_message"],
-            chat_history=state.get("chat_history", [])
+            **state
         )
 
         workflow = compile_rag_workflow()
@@ -89,8 +87,12 @@ def chat_workflow():
             return {"errors": errors}
         
         if final_rag_state.get("errors"):
-            rag_errors = final_rag_state["errors"]
-            state.get("errors", []).append(rag_errors)
+            errors = state.get("errors", [])
+            errors.extend(final_rag_state["errors"])
+            return {
+                "errors": errors,
+                "final_response": final_response,
+            }
         
         return {"final_response": final_rag_state["generated_reply"]}
 
@@ -122,7 +124,7 @@ def chat_workflow():
         for msg in state.get("chat_history", []):
             messages.append(msg)
 
-        messages.append(ChatMessage(role=MessageRole.HUMAN, content=state["incomming_message"]))
+        messages.append(ChatMessage(role=MessageRole.HUMAN, content=state["incoming_message"]))
 
         try:
             response = await llm.ainvoke(messages)
@@ -133,7 +135,7 @@ def chat_workflow():
 
         except Exception:
             errors = state.get("errors", [])
-            errors.append("Error generating llm response")
+            errors.append("Error generating fallback response")
             return {
                 "errors": errors,
                 "intent": "error"
