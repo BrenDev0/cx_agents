@@ -49,7 +49,7 @@ def chat_workflow():
 
         except Exception:
             errors = state.get("errors", [])
-            errors.append("Error generating llm response")
+            errors.append("Error generating intent response")
             return {
                 "errors": errors,
                 "intent": "error"
