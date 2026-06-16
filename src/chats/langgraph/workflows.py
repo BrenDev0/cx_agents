@@ -110,7 +110,7 @@ def chat_workflow():
         If the message is too vague, ask what they would like help with.
 
         Keep the response friendly and under 30 words.
-        Only response in the language of the conversation
+        Only respond in the language of the conversation
         """
         messages = [
             ChatMessage(
