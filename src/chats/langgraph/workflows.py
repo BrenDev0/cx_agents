@@ -98,7 +98,46 @@ def chat_workflow():
         pass
 
     async def fallback_node(state: ChatState):
-        pass
+        llm = get_model(model=state["llm_model"], provider=state["llm_provider"], api_key=state["api_key"])
+        system_prompt = """
+        The user's intent could not be confidently classified.
+
+        Use the chat history and the user's latest message to ask one concise clarification question.
+        Do not answer the user's request yet.
+        Do not mention internal labels, routing, classification, agents, or workflows.
+        If the message appears related to appointments, ask for the missing appointment detail.
+        If the message appears related to general business information, ask what specific service, product, policy, or topic they mean.
+        If the message is too vague, ask what they would like help with.
+
+        Keep the response friendly and under 30 words.
+        Only response in the language of the conversation
+        """
+        messages = [
+            ChatMessage(
+                role=MessageRole.SYSTEM,
+                content=system_prompt
+            )
+        ]
+
+        for msg in state.get("chat_history", []):
+            messages.append(msg)
+
+        messages.append(ChatMessage(role=MessageRole.HUMAN, content=state["incomming_message"]))
+
+        try:
+            response = await llm.ainvoke(messages)
+            content = str(response.content).strip()
+
+            return {"final_response": content}
+            
+
+        except Exception:
+            errors = state.get("errors", [])
+            errors.append("Error generating llm response")
+            return {
+                "errors": errors,
+                "intent": "error"
+            }
 
     async def send_response_node(state: ChatState):
         pass
