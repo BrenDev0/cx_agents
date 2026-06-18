@@ -1,5 +1,6 @@
 from typing import TypedDict, NotRequired
 from enum import StrEnum
+from pydantic import BaseModel
 
 class MessageRole(StrEnum):
     SYSTEM = "system"
@@ -28,6 +29,18 @@ class ChatState(BaseState):
     available_intents: dict[str, IntentDefinition]
     identified_intent: NotRequired[str]
     final_response: NotRequired[str]
+
+
+class ChatRequest(BaseModel):
+    contact_id: str
+    llm_provider: str
+    llm_model: str
+    api_key: str
+    pit: str
+    incoming_message: str
+    chat_history: str
+    activate_appointments: bool
+    activate_rag: bool
     
     
 
