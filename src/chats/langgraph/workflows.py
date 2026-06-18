@@ -2,24 +2,19 @@ from langgraph.graph import StateGraph, START, END
 
 from src.rag.schemas import RagState
 from src.rag.langgraph.workflows import compile_rag_workflow
-from src.llm.langchain.models import get_model
 
 from ..intents import format_intents_for_prompt
 from ..schemas import ChatState, MessageRole, ChatMessage
 
 
-def chat_workflow():
+def compile_chat_workflow(llm):
     graph = StateGraph(ChatState)
 
-    async def get_chat_history_node(state: ChatState):
-        pass
-    
     async def identify_intent_node(state: ChatState):
-        llm = get_model(model=state["llm_model"], provider=state["llm_provider"], api_key=state["api_key"])
         available_intents = state["available_intents"]
         intent_options = format_intents_for_prompt(available_intents)
         system_prompt = f"""
-        Classify the user's latest message using the chat history.
+        Classify the user's latest message using the chat history if available.
 
         Return exactly one of these labels:
 
@@ -73,12 +68,14 @@ def chat_workflow():
 
     async def rag_workflow(state: ChatState):
         rag_state = RagState(
-            **state
+            contact_id=state["contact_id"],
+            incoming_message=state["incoming_message"],
+            chat_history=state.get("chat_history", [])
         )
 
-        workflow = compile_rag_workflow()
+        workflow = compile_rag_workflow(llm)
 
-        final_rag_state: RagState = await workflow.ainvoke(rag_state)
+        final_rag_state = await workflow.ainvoke(rag_state)
         
         final_response = final_rag_state.get("generated_reply")
 
@@ -101,7 +98,6 @@ def chat_workflow():
         return {}
 
     async def plain_llm_node(state: ChatState):
-        llm = get_model(model=state["llm_model"], provider=state["llm_provider"], api_key=state["api_key"])
         messages = []
 
         for msg in state.get("chat_history", []):
@@ -125,7 +121,6 @@ def chat_workflow():
             }
 
     async def fallback_node(state: ChatState):
-        llm = get_model(model=state["llm_model"], provider=state["llm_provider"], api_key=state["api_key"])
         system_prompt = """
         The user's intent could not be confidently classified.
 
@@ -173,7 +168,6 @@ def chat_workflow():
         return {}
 
 
-    graph.add_node("get_chat_history", get_chat_history_node)
     graph.add_node("identify_intent", identify_intent_node)
     graph.add_node("rag", rag_workflow)
     graph.add_node("appointments", appointments_workflow)
@@ -182,8 +176,7 @@ def chat_workflow():
     graph.add_node("reply", send_response_node)
     graph.add_node("error", handle_errors_node)
 
-    graph.add_edge(START, "get_chat_history")
-    graph.add_edge("get_chat_history", "identify_intent")
+    graph.add_edge(START, "identify_intent")
     graph.add_conditional_edges(
         "identify_intent",
         intent_decision,

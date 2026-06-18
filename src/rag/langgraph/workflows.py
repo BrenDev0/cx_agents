@@ -2,15 +2,13 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph.state import CompiledStateGraph
 
 from src.chats.schemas import ChatMessage, MessageRole
-from src.llm.langchain.models import get_model
 from ..schemas import RagState
 
 
-def compile_rag_workflow() -> CompiledStateGraph:
+def compile_rag_workflow(llm) -> CompiledStateGraph:
     graph = StateGraph(RagState)
 
     async def generate_query_node(state: RagState):
-        llm = get_model(model=state["llm_model"], provider=state["llm_provider"], api_key=state["api_key"])
         system_prompt = """
         You generate retrieval queries for a RAG system.
 

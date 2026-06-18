@@ -14,11 +14,13 @@ class RedisCacheStore:
         data: dict[str, Any],
         expire_seconds: int
     )-> bool:
-        return await self._redis.set(
+        result = await self._redis.set(
             name=key,
             value=json.dumps(data),
             ex=expire_seconds
         )
+
+        return bool(result)
     
     async def get(self, key: str) -> dict[str, Any] | None:
         data = await self._redis.get(name=key)
@@ -30,18 +32,19 @@ class RedisCacheStore:
     async def expire(
         self, 
         key:str, 
-        expipre_seconds: int
+        expire_seconds: int
     )-> bool: 
         return await self._redis.expire(
             name=key,
-            time=expipre_seconds
+            time=expire_seconds
         )
     
     async def increment(self, key: str) -> int:
         return await self._redis.incr(name=key)
     
     async def remove(self, key: str) -> bool:
-        return await self._redis.delete(key) > 0
+        result = await self._redis.delete(key)
+        return bool(result)
     
     async def close_connection(self):
         await self._redis.close()

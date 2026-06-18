@@ -25,7 +25,7 @@ class AppointmentsClient:
         end_date: int,
         timezone: str
     ):
-        query_params = {
+        query_params: dict[str, str | int] = {
             "startDate": start_date,
             "endDate": end_date,
             "timeZone": timezone
@@ -59,7 +59,7 @@ class AppointmentsClient:
         }
 
         response = await self.http.post(
-            url=f"/calendars/events/appointments",
+            url="/calendars/events/appointments",
             json=body
         )
         response.raise_for_status()
