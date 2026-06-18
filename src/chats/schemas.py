@@ -7,6 +7,9 @@ class MessageRole(StrEnum):
     AI = "assistant"
 
 
+class IntentDefinition(TypedDict):
+    description: str
+
 class ChatMessage(TypedDict):
     role: MessageRole
     content: str
@@ -22,7 +25,8 @@ class BaseState(TypedDict):
 
 
 class ChatState(BaseState):
-    intent: NotRequired[str]
+    available_intents: dict[str, IntentDefinition]
+    identified_intent: NotRequired[str]
     final_response: NotRequired[str]
     
     

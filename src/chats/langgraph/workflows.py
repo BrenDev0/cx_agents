@@ -4,6 +4,7 @@ from src.rag.schemas import RagState
 from src.rag.langgraph.workflows import compile_rag_workflow
 from src.llm.langchain.models import get_model
 
+from ..intents import format_intents_for_prompt
 from ..schemas import ChatState, MessageRole, ChatMessage
 
 
@@ -15,15 +16,17 @@ def chat_workflow():
     
     async def identify_intent_node(state: ChatState):
         llm = get_model(model=state["llm_model"], provider=state["llm_provider"], api_key=state["api_key"])
-        system_prompt = """
-        classify the users latest message using the chat history.
+        available_intents = state["available_intents"]
+        intent_options = format_intents_for_prompt(available_intents)
+        system_prompt = f"""
+        Classify the user's latest message using the chat history.
 
-        return only ONE label:
-        APPOINTMENTS = the user is expressing intest in booking, canceling, or updating an appointment
-        QUERY = the user looking for general information about services, products, ect
-        FALLBACK = you cannot accuratley classify the intent and need more info
+        Return exactly one of these labels:
 
-        Do not explain your choice. Return only the label.
+        {intent_options}
+
+        Do not explain your choice.
+        Return only the label.
         """
         messages = [
             ChatMessage(
@@ -42,32 +45,30 @@ def chat_workflow():
             content = str(response.content).strip().lower()
             intent = content.split()[0] if content else "fallback"
 
-            if intent not in {"appointments", "query", "fallback"}:
+            if intent not in available_intents:
                 intent = "fallback"
 
-            return {"intent": intent}
+            return {"identified_intent": intent}
 
         except Exception:
             errors = state.get("errors", [])
             errors.append("Error generating intent response")
             return {
                 "errors": errors,
-                "intent": "error"
+                "identified_intent": "error"
             }
 
 
     def intent_decision(state: ChatState):
-        match state["intent"]:
-            case "appointments":
-                return "appointments"
-            case "query":
-                return "rag"
-            case "fallback":
-                return "fallback"
-            case "error":
-                return "error"
-            case _: 
-                return "fallback"
+        intent = state.get("identified_intent", "fallback")
+
+        if intent == "error":
+            return "error"
+
+        if intent not in state["available_intents"]:
+            return "fallback"
+
+        return intent
 
 
     async def rag_workflow(state: ChatState):
@@ -97,7 +98,31 @@ def chat_workflow():
         return {"final_response": final_rag_state["generated_reply"]}
 
     async def appointments_workflow(state: ChatState):
-        pass
+        return {}
+
+    async def plain_llm_node(state: ChatState):
+        llm = get_model(model=state["llm_model"], provider=state["llm_provider"], api_key=state["api_key"])
+        messages = []
+
+        for msg in state.get("chat_history", []):
+            messages.append(msg)
+
+        messages.append(ChatMessage(role=MessageRole.HUMAN, content=state["incoming_message"]))
+
+        try:
+            response = await llm.ainvoke(messages)
+            content = str(response.content).strip()
+
+            return {"final_response": content}
+            
+
+        except Exception:
+            errors = state.get("errors", [])
+            errors.append("Error generating plain LLM response")
+            return {
+                "errors": errors,
+                "identified_intent": "error"
+            }
 
     async def fallback_node(state: ChatState):
         llm = get_model(model=state["llm_model"], provider=state["llm_provider"], api_key=state["api_key"])
@@ -138,20 +163,21 @@ def chat_workflow():
             errors.append("Error generating fallback response")
             return {
                 "errors": errors,
-                "intent": "error"
+                "identified_intent": "error"
             }
 
     async def send_response_node(state: ChatState):
-        pass
+        return {}
 
     async def handle_errors_node(state: ChatState):
-        pass
+        return {}
 
 
     graph.add_node("get_chat_history", get_chat_history_node)
     graph.add_node("identify_intent", identify_intent_node)
     graph.add_node("rag", rag_workflow)
     graph.add_node("appointments", appointments_workflow)
+    graph.add_node("plain_llm", plain_llm_node)
     graph.add_node("fallback", fallback_node)
     graph.add_node("reply", send_response_node)
     graph.add_node("error", handle_errors_node)
@@ -164,12 +190,14 @@ def chat_workflow():
         {
             "appointments": "appointments",
             "rag": "rag",
+            "plain_llm": "plain_llm",
             "fallback": "fallback",
             "error": "error" 
         }
     )
     graph.add_edge("appointments", "reply")
     graph.add_edge("rag", "reply")
+    graph.add_edge("plain_llm", "reply")
     graph.add_edge("fallback", "reply")
     graph.add_edge("reply", END)
     graph.add_edge("error", END)
