@@ -16,7 +16,6 @@ class AppointmentsClient:
         response.raise_for_status()
         return response.json()
 
-    
 
     async def get_slots(
         self,

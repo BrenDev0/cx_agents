@@ -25,8 +25,14 @@ class ChatState(BaseState):
     identified_intent: NotRequired[str]
     final_response: NotRequired[str]
 
+
+class AcceptedChannels(StrEnum):
+    WHATSAPP = "whatsapp"
+    MESSENGER = "messenger"
+
 class ChatRequest(BaseModel):
     contact_id: str
+    channel: AcceptedChannels
     llm_provider: str
     llm_model: str
     api_key: str
