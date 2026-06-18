@@ -30,17 +30,22 @@ class ConversationsClient:
 
     async def get_conversation_by_contact_id(
         self,
-        contact_id: str
+        contact_id: str,
+        limit: int = 5
     ) -> str:
-        query_parameters = {
-            contact_id: contact_id
-        }
+        query_parameters = httpx.QueryParams(
+            contactId=contact_id,
+            limit=limit
+        )
         response = await self.http.get(
             "/conversations/search",
             params=query_parameters
         )
 
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+        messages = data.get("messages", [])
+
+        return messages
 
 

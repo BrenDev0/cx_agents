@@ -16,6 +16,7 @@ class ChatMessage(TypedDict):
 
 class BaseState(TypedDict):
     contact_id: str
+    pit: str
     incoming_message: str
     chat_history: NotRequired[list[ChatMessage]]
     errors: NotRequired[list[str]]
@@ -33,9 +34,6 @@ class AcceptedChannels(StrEnum):
 class ChatRequest(BaseModel):
     contact_id: str
     channel: AcceptedChannels
-    llm_provider: str
-    llm_model: str
-    api_key: str
     pit: str
     incoming_message: str
     chat_history: list[ChatMessage] = Field(default_factory=list)
@@ -43,11 +41,7 @@ class ChatRequest(BaseModel):
     activate_rag: bool
 
 
-class LLMConfig(TypedDict):
-    llm_provider: str
-    llm_model: str
-    api_key: str
 
 class ChatTaskPayload(TypedDict):
-    llm: LLMConfig
     state: ChatState
+    ok_to_reply: bool

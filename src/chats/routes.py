@@ -1,8 +1,9 @@
 from fastapi import APIRouter
+from celery import chain
 
-from .schemas import ChatRequest, ChatState, ChatTaskPayload, LLMConfig
+from .schemas import ChatRequest, ChatState, ChatTaskPayload
 from .intents import build_available_intents
-from .celery.tasks import invoke_chat_workflow
+from .celery.tasks import invoke_chat_workflow, should_reply
 
 router = APIRouter(
     tags=["Chats"]
@@ -16,25 +17,25 @@ async def chat(
     
     state = ChatState(
         contact_id=data.contact_id,
+        pit=data.pit,
         incoming_message=data.incoming_message,
         chat_history=data.chat_history,
         available_intents=build_available_intents(has_appointments=data.activate_appointments, has_rag=data.activate_rag)
     )
 
-    task_payload = ChatTaskPayload(
+    job_payload = ChatTaskPayload(
         state=state,
-        llm=LLMConfig(
-            llm_provider=data.llm_provider,
-            llm_model=data.llm_model,
-            api_key=data.api_key
-        )
+        should_reply=True
     )
 
-    task = invoke_chat_workflow.delay(task_payload)
+    job = chain(
+        should_reply.s(job_payload),
+        invoke_chat_workflow.s()
+    ).apply_async()
 
     return {
         "status": "Accepted",
-        "task_id": task.id 
+        "task_id": job.id 
     }
 
     

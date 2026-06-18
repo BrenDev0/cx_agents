@@ -11,19 +11,14 @@ async def is_channel_blocked(
     cache_store: CacheStore = Depends(get_cache_store) 
 ) -> bool:
     channel = data.channel
-    key = ""
-
-    match(channel):
-        case "whatsapp":
-            key = ChatCacheKey.WHATSAPP_BLOCK
-        case "messenger":
-            key = ChatCacheKey.MESSENGER_BLOCK
-        case _:
-            raise HTTPException(status_code=400, detail=f"Invalid channel {channel}")
+    key = ChatCacheKey.BLOCKED_CHANNELS
         
-    channel_is_blocked = await cache_store.get(key)
+    blocked_channels = cache_store.get(key)
+
+    if blocked_channels and channel in blocked_channels:
+        return True
     
-    return True if channel_is_blocked else False 
+    return False
 
 
 async def should_reply(

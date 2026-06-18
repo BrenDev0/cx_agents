@@ -3,7 +3,7 @@ from .appointments import AppointmentsClient
 from .conversations import ConversationsClient
 
 class GoHighLevelClient:
-    def __int__(
+    def __init__(
         self,
         pit: str
     ):
