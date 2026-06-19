@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Depends
 import json
 from .schemas import ChatRequest, ChatState, ChatMessage, MessageRole
 from .intents import build_available_intents
@@ -30,14 +30,10 @@ async def chat(
         state = ChatState(
             contact_id=data.contact_id,
             pit=data.pit,
-            incoming_message=data.incoming_message,
+            incoming_message=formated_chat_history[0]["content"],
             chat_history=formated_chat_history,
             available_intents=build_available_intents(has_appointments=data.activate_appointments, has_rag=data.activate_rag)
         )
-
-        print(state)
-        print(f"should reply:::{ok_to_reply}")
-
 
         task = invoke_chat_workflow.delay(state)
 
