@@ -11,3 +11,5 @@ def get_cache_store(request:  Request) -> CacheStore:
     if not store:
         logger.error("No cache store configured in app")
         raise HTTPException(status_code=500, detail="Unable to process request at this time")
+    
+    return store

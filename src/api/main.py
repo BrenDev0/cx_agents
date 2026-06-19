@@ -1,7 +1,24 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
+from src.cache.redis import RedisCacheStore
+from src.settings import settings
 from .router import router as api_router
 
-app = FastAPI()
+
+
+async def lifespan(app: FastAPI):
+    cache_store = RedisCacheStore(connection_url=settings.REDIS_URL)
+    app.state.cache_store = cache_store
+
+    try:
+        yield
+    
+    finally:
+        await cache_store.close_connection()
+
+
+app = FastAPI(lifespan=lifespan)
 
 @app.get("/")
 def health_check():

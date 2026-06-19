@@ -11,9 +11,9 @@ async def is_channel_blocked(
     cache_store: CacheStore = Depends(get_cache_store) 
 ) -> bool:
     channel = data.channel
-    key = ChatCacheKey.BLOCKED_CHANNELS
+    key = f"{data.contact_id}:{ChatCacheKey.BLOCKED_CHANNELS}"
         
-    blocked_channels = cache_store.get(key)
+    blocked_channels = await cache_store.get(key)
 
     if blocked_channels and channel in blocked_channels:
         return True
@@ -29,8 +29,21 @@ async def should_reply(
     if channel_is_blocked:
         return False
     
-    key = ChatCacheKey.LAST_SENT_MESSAGE_ID
+    key = f"{data.contact_id}:{ChatCacheKey.LAST_SENT_MESSAGE_ID}:{data.channel}"
+    last_sent_id = await cache_store.get(key)
 
-    last_message_id_in_history = data.chat_history[0].id
+    if not last_sent_id:
+        return True
+
+    outbound_messages = [
+        message.id for message in data.chat_history if message.get("direction", "") == "outbound"
+    ]
+
+    if str(last_sent_id) == str(outbound_messages[0]):
+        return True
+    
+    return False
+
+    
 
     

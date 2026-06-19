@@ -22,7 +22,7 @@ class RedisCacheStore:
 
         return bool(result)
     
-    async def get(self, key: str) -> dict[str, Any] | None:
+    async def get(self, key: str) -> Any | None:
         data = await self._redis.get(name=key)
         if data is None:
             return None

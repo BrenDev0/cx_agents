@@ -1,4 +1,5 @@
 from typing_extensions import TypedDict, NotRequired
+from typing import Any
 from enum import StrEnum
 from pydantic import BaseModel, Field
 
@@ -27,21 +28,11 @@ class ChatState(BaseState):
     final_response: NotRequired[str]
 
 
-class AcceptedChannels(StrEnum):
-    WHATSAPP = "whatsapp"
-    MESSENGER = "messenger"
-
 class ChatRequest(BaseModel):
     contact_id: str
-    channel: AcceptedChannels
+    channel: str
     pit: str
     incoming_message: str
-    chat_history: list[ChatMessage] = Field(default_factory=list)
+    chat_history: list[dict[str, Any]] = Field(default_factory=list)
     activate_appointments: bool
     activate_rag: bool
-
-
-
-class ChatTaskPayload(TypedDict):
-    state: ChatState
-    ok_to_reply: bool

@@ -1,9 +1,9 @@
-from fastapi import APIRouter
-from celery import chain
-
-from .schemas import ChatRequest, ChatState, ChatTaskPayload
+from fastapi import APIRouter, Depends, Body
+import json
+from .schemas import ChatRequest, ChatState, ChatMessage, MessageRole
 from .intents import build_available_intents
-from .celery.tasks import invoke_chat_workflow, should_reply
+from .celery.tasks import invoke_chat_workflow
+from .dependencies import should_reply
 
 router = APIRouter(
     tags=["Chats"]
@@ -12,30 +12,42 @@ router = APIRouter(
 
 @router.post("", status_code=202)
 async def chat(
-    data: ChatRequest
+    data: ChatRequest,
+    ok_to_reply: bool = Depends(should_reply)
 ):
+    print(data)
+    print(f"ok to reply?{ok_to_reply}")
     
-    state = ChatState(
-        contact_id=data.contact_id,
-        pit=data.pit,
-        incoming_message=data.incoming_message,
-        chat_history=data.chat_history,
-        available_intents=build_available_intents(has_appointments=data.activate_appointments, has_rag=data.activate_rag)
-    )
+    if ok_to_reply:
+        formated_chat_history = []
+        for message in data.chat_history:
+            formated_chat_history.append(ChatMessage(
+                    role=MessageRole.AI if message["direction"] == "outbound" else MessageRole.HUMAN,
+                    content=message["body"]
+                ) 
+            )
+        
+        state = ChatState(
+            contact_id=data.contact_id,
+            pit=data.pit,
+            incoming_message=data.incoming_message,
+            chat_history=formated_chat_history,
+            available_intents=build_available_intents(has_appointments=data.activate_appointments, has_rag=data.activate_rag)
+        )
 
-    job_payload = ChatTaskPayload(
-        state=state,
-        should_reply=True
-    )
+        print(state)
+        print(f"should reply:::{ok_to_reply}")
 
-    job = chain(
-        should_reply.s(job_payload),
-        invoke_chat_workflow.s()
-    ).apply_async()
 
+        task = invoke_chat_workflow.delay(state)
+
+        return {
+            "status": "Accepted",
+            "task_id": task.id
+        }
+    
     return {
-        "status": "Accepted",
-        "task_id": job.id 
+        "status": "Rejected"
     }
 
     
