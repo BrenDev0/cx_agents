@@ -1,14 +1,15 @@
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.state import CompiledStateGraph
 
-from src.chats.schemas import ChatMessage, MessageRole
-from ..schemas import RagState
+from src.chats.types import ChatMessage, MessageRole
+from src.embeddings.protocols import EmbeddingService
+from ..state import RagState
 
 
-def compile_rag_workflow(llm) -> CompiledStateGraph:
+def compile_rag_workflow(embedding_service: EmbeddingService, llm) -> CompiledStateGraph:
     graph = StateGraph(RagState)
 
-    async def generate_query_node(state: RagState):
+    async def generate_query_node(state: RagState, ):
         system_prompt = """
         You generate retrieval queries for a RAG system.
 
@@ -48,7 +49,8 @@ def compile_rag_workflow(llm) -> CompiledStateGraph:
             }
 
     async def embed_query_node(state: RagState):
-        pass
+        embeddings = await embedding_service.embed_query(query=state["generated_query"])
+        return {"embedded_query": embeddings}
 
     async def search_for_context_node(state: RagState):
         pass 

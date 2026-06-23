@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
-import json
-from .schemas import ChatRequest, ChatState, ChatMessage, MessageRole
+from .schemas import ChatRequest
+from .state import ChatState
+from .types import ChatMessage, MessageRole
 from .intents import build_available_intents
 from .celery.tasks import invoke_chat_workflow
 from .dependencies import should_reply

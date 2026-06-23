@@ -1,6 +1,6 @@
 from typing_extensions import NotRequired
 
-from src.chats.schemas import BaseState
+from src.chats.state import BaseState
 
 class RagState(BaseState):
     generated_query: NotRequired[str]

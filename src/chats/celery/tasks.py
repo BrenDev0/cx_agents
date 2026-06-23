@@ -2,7 +2,7 @@ import asyncio
 from pydantic import SecretStr
 from src.workers.celery.app import worker
 from src.chats.langgraph.workflows import compile_chat_workflow
-from src.chats.schemas import ChatState
+from src.chats.state import ChatState
 from src.llm.langchain.models import get_model
 from src.settings import settings
 

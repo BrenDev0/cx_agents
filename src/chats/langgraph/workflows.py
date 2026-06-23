@@ -1,10 +1,11 @@
 from langgraph.graph import StateGraph, START, END
 
-from src.rag.schemas import RagState
+from src.rag.state import RagState
 from src.rag.langgraph.workflows import compile_rag_workflow
 
 from ..intents import format_intents_for_prompt
-from ..schemas import ChatState, MessageRole, ChatMessage
+from ..state import ChatState
+from ..types import MessageRole, ChatMessage
 
 
 def compile_chat_workflow(llm):

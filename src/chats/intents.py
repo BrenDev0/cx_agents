@@ -1,5 +1,8 @@
-from .schemas import IntentDefinition
+from typing_extensions import TypedDict
 
+
+class IntentDefinition(TypedDict):
+    description: str
 
 INTENT_REGISTRY: dict[str, IntentDefinition] = {
     "fallback": {
