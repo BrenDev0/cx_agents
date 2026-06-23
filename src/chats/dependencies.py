@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 
 from src.cache.dependencies import get_cache_store
 from src.cache.protocols import CacheStore
