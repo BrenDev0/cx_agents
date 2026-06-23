@@ -16,4 +16,6 @@ class Settings(BaseSettings):
         env_file=".env"
     )
 
+    DATABASE_URL: str
+
 settings = Settings() # type: ignore[call-arg]

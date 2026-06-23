@@ -1,24 +1,73 @@
 from contextlib import asynccontextmanager
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from fastapi import FastAPI, Request
+from httpx import AsyncClient
 
-from fastapi import FastAPI
 from src.cache.redis import RedisCacheStore
+from src.db.sqlalchemy.core import engine
+from src.cryptography.services import DefaultCryptographyService
+from src.cryptography.encryption import encrypt, decrypt 
 from src.settings import settings
 from .router import router as api_router
 
 
-
+@asynccontextmanager
 async def lifespan(app: FastAPI):
     cache_store = RedisCacheStore(connection_url=settings.REDIS_URL)
     app.state.cache_store = cache_store
+
+    db_session_maker = async_sessionmaker(bind=engine, expire_on_commit=False)
+    app.state.db_session_maker = db_session_maker
+
+    cryptography_service = DefaultCryptographyService(
+        encrypt=encrypt,
+        decrypt=decrypt
+    )
+    app.state.cryptography = cryptography_service
+
+
+    app.state.ghl_http = AsyncClient(
+        base_url="https://services.leadconnectorhq.com",
+        timeout=30.0,
+    )
 
     try:
         yield
     
     finally:
         await cache_store.close_connection()
+        await app.state.ghl_http.aclose()
 
 
 app = FastAPI(lifespan=lifespan)
+
+
+@app.middleware("http")
+async def db_session_middleware(
+    request: Request,
+    call_next
+):
+    if "/api/v1" not in str(request.url):
+        return await call_next(request)
+    
+    try:
+        session = request.app.state.db_session_maker()
+        request.state.db = session
+
+        response = await call_next(request)
+
+        if hasattr(request.state, "db") and request.state.db.is_active:
+            await request.state.db.commit()
+
+        return response
+
+    except Exception:
+        await request.state.db.rollback()
+        await request.state.db.close()
+        raise
+    
+    finally:
+        await request.state.db.close()
 
 @app.get("/")
 def health_check():

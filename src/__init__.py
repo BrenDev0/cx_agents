@@ -1,0 +1,1 @@
+from src.credentials.sqlalchemy.models import CredentialRow #noqa: F401

@@ -1,51 +1,33 @@
 import httpx
 
-class ConversationsClient:
+class GHLConversationsClient:
     def __init__(
         self,
-        http: httpx.AsyncClient
+        http: httpx.AsyncClient,
+        headers: dict[str, str]
     ):
-        self.http = http
+        self._http = http
+        self._headers = headers
 
     async def send_message(
         self,
-        type: str,
+        channel: str,
         contact_id: str,
         message: str
     ):
         body = {
-            "type": type,
+            "type": channel,
             "contactId": contact_id,
             "message": message,
             "status": "delivered"
         }
 
-        response = await self.http.post(
+        response = await self._http.post(
             "/conversations/messages",
+            headers=self._headers,
             json=body
         )
         response.raise_for_status()
         return response.json()
-    
-
-    async def get_conversation_by_contact_id(
-        self,
-        contact_id: str,
-        limit: int = 5
-    ) -> str:
-        query_parameters = httpx.QueryParams(
-            contactId=contact_id,
-            limit=limit
-        )
-        response = await self.http.get(
-            "/conversations/search",
-            params=query_parameters
-        )
-
-        response.raise_for_status()
-        data = response.json()
-        messages = data.get("messages", [])
-
-        return messages
 
 

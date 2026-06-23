@@ -3,16 +3,21 @@ import httpx
 class AppointmentsClient:
     def __init__(
         self,
-        http: httpx.AsyncClient
+        http: httpx.AsyncClient,
+        headers: dict[str, str]
     ):
-        self.http = http
+        self._http = http
+        self._headers = headers
 
 
     async def check_for_existing_appointment(
         self,
         contact_id: str
     ):
-        response = await self.http.get(f"/contacts/{contact_id}/appointments")
+        response = await self._http.get(
+            f"/contacts/{contact_id}/appointments",
+            headers=self._headers
+        )
         response.raise_for_status()
         return response.json()
 
@@ -30,8 +35,9 @@ class AppointmentsClient:
             "timeZone": timezone
         }
         
-        response = await self.http.get(
+        response = await self._http.get(
             url=f"/calendars/{calendar_id}/free-slots",
+            headers=self._headers,
             params=query_params
         )
 
@@ -57,8 +63,9 @@ class AppointmentsClient:
             "startTime": start_time   
         }
 
-        response = await self.http.post(
+        response = await self._http.post(
             url="/calendars/events/appointments",
+            headers=self._headers,
             json=body
         )
         response.raise_for_status()
