@@ -24,20 +24,22 @@ async def is_channel_blocked(
 async def _block_channel(
     cache_store: CacheStore,
     contact_id: str,
-    channel: str
-):
-    key = f"{contact_id}:{ChatCacheKey.BLOCKED_CHANNELS}"
+    channel: str,
+) -> None:
+    key = f"{contact_id}:{ChatCacheKey.BLOCKED_CHANNELS.value}"
 
-    blocked_channels = await cache_store.get(key)
-    if blocked_channels:
-        blocked_channels[channel] = "blocked"
+    blocked_channels = await cache_store.get(key) or {}
 
-    else:
-        blocked_channels = {
-            f"{channel}": "blocked"
-        }
+    if not isinstance(blocked_channels, dict):
+        raise TypeError("Blocked channels cache value must be a dictionary.")
 
-    await cache_store.store(key, data=blocked_channels, expire_seconds=3500)
+    blocked_channels[channel] = "blocked"
+
+    await cache_store.store(
+        key,
+        data=blocked_channels,
+        expire_seconds=3500,
+    )
 
 
 async def should_reply(
