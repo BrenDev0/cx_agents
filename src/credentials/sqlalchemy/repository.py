@@ -11,7 +11,7 @@ async def create(
 ) -> Credential:
     row = domain_partial_to_row(credential_in)
 
-    await db.add(row)
+    db.add(row)
     await db.flush()
     await db.refresh(row)
 
