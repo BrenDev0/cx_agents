@@ -2,7 +2,7 @@ from src.integrations.protocols import ConversationClient
 from src.cache.protocols import CacheStore
 from src.llm.protocols import Agent
 
-from .types import ChatMessage, MessageRole
+from src.types import ChatMessage, MessageRole
 from .intents import format_intents_for_prompt, build_intent_classifier_prompt, IntentStructure, IntentDefinition
 from .cache_keys import get_last_message_id_key
 

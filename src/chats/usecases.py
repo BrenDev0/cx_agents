@@ -1,6 +1,6 @@
 from src.integrations.protocols import ConversationClient
 
-from .types import MessageRole, ChatMessage
+from src.types import MessageRole, ChatMessage
 from .schemas import ChatRequest
 from .state import ChatState
 from .intents import build_available_intents
