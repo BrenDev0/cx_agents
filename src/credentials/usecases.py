@@ -1,7 +1,7 @@
 from src.cryptography.types import EncryptFn
 from .models import Credential, CredentialPartial
 from .types import CreateCredentialFn
-from .schemas import CreateCredentialRequest
+from .schemas import CreateCredentialRequest, CredentialPublic
 
 
 async def handle_create_credential(
@@ -16,6 +16,9 @@ async def handle_create_credential(
 
     new_credential = await create_credential(prepared_data)
 
-    return 
+    return CredentialPublic(
+        id=new_credential.id,
+        external_id=new_credential.external_id
+    )
     
     

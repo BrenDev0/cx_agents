@@ -4,14 +4,14 @@ from src.cache.dependencies import get_cache_store
 from src.cache.protocols import CacheStore
 
 from .schemas import ChatRequest
-from .cache_keys import ChatCacheKey
+from .cache_keys import get_blocked_channel_key, get_last_message_id_key
 
 async def is_channel_blocked(
     data: ChatRequest,
     cache_store: CacheStore = Depends(get_cache_store) 
 ) -> bool:
     channel = data.channel
-    key = f"{data.contact_id}:{ChatCacheKey.BLOCKED_CHANNELS}"
+    key = get_blocked_channel_key(contact_id=data.contact_id)
         
     blocked_channels = await cache_store.get(key)
 
@@ -26,7 +26,7 @@ async def _block_channel(
     contact_id: str,
     channel: str,
 ) -> None:
-    key = f"{contact_id}:{ChatCacheKey.BLOCKED_CHANNELS.value}"
+    key = get_blocked_channel_key(contact_id=contact_id)
 
     blocked_channels = await cache_store.get(key) or {}
 
@@ -50,7 +50,7 @@ async def should_reply(
     if channel_is_blocked:
         return False
     
-    key = f"{data.contact_id}:{ChatCacheKey.LAST_SENT_MESSAGE_ID}:{data.channel}"
+    key = get_last_message_id_key(contact_id=data.contact_id, channel=data.channel)
     last_sent_id = await cache_store.get(key)
 
     if not last_sent_id:

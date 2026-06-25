@@ -1,47 +1,24 @@
 from fastapi import APIRouter, Depends
 from .schemas import ChatRequest
-from .state import ChatState
-from .types import ChatMessage, MessageRole
-from .intents import build_available_intents
-from .celery.tasks import invoke_chat_workflow
 from .dependencies import should_reply
+from .usecases import handle_chat
 
 router = APIRouter(
     tags=["Chats"]
 )
 
 
-@router.post("", status_code=202)
+@router.post("/{location_id}", status_code=202)
 async def chat(
+    location_id: str,
     data: ChatRequest,
     ok_to_reply: bool = Depends(should_reply)
 ):
-    print(data)
-    print(f"ok to reply?{ok_to_reply}")
-    
     if ok_to_reply:
-        formated_chat_history = []
-        for message in data.chat_history:
-            formated_chat_history.append(ChatMessage(
-                    role=MessageRole.AI if message["direction"] == "outbound" else MessageRole.HUMAN,
-                    content=message["body"]
-                ) 
-            )
-        
-        state = ChatState(
-            contact_id=data.contact_id,
-            pit=data.pit,
-            incoming_message=formated_chat_history[0]["content"],
-            chat_history=formated_chat_history,
-            available_intents=build_available_intents(has_appointments=data.activate_appointments, has_rag=data.activate_rag)
+        return await handle_chat(
+            data_in=data,
+            location_id=location_id
         )
-
-        task = invoke_chat_workflow.delay(state)
-
-        return {
-            "status": "Accepted",
-            "task_id": task.id
-        }
     
     return {
         "status": "Rejected"

@@ -3,10 +3,11 @@ from langgraph.graph.state import CompiledStateGraph
 
 from src.chats.types import ChatMessage, MessageRole
 from src.embeddings.protocols import EmbeddingService
+from src.llm.protocols import Agent
 from ..state import RagState
 
 
-def compile_rag_workflow(embedding_service: EmbeddingService, llm) -> CompiledStateGraph:
+def compile_rag_workflow(embedding_service: EmbeddingService, llm: Agent) -> CompiledStateGraph:
     graph = StateGraph(RagState)
 
     async def generate_query_node(state: RagState, ):
@@ -20,7 +21,7 @@ def compile_rag_workflow(embedding_service: EmbeddingService, llm) -> CompiledSt
         - Preserve important names, services, products, policies, dates, locations, IDs, error codes, and quoted text.
         - Remove filler words and conversational phrasing.
         - Do not answer the user.
-        - Do not explain your reasoning.
+        - Do not explain your reasoning.s
         - Do not add facts not present in the conversation.
         - Return only the query text.
         """
@@ -37,9 +38,8 @@ def compile_rag_workflow(embedding_service: EmbeddingService, llm) -> CompiledSt
         messages.append(ChatMessage(role=MessageRole.HUMAN, content=state["incoming_message"]))
 
         try:
-            response = await llm.ainvoke(messages)
-            content = str(response.content).strip()
-            return {"generated_query": content}
+            response = await llm.invoke(messages)
+            return {"generated_query": response}
 
         except Exception:
             errors = state.get("errors", [])
@@ -53,13 +53,13 @@ def compile_rag_workflow(embedding_service: EmbeddingService, llm) -> CompiledSt
         return {"embedded_query": embeddings}
 
     async def search_for_context_node(state: RagState):
-        pass 
+        return {}
 
     async def build_prompt_node(state: RagState):
-        pass
+        return {}
 
     async def generate_response_node(state: RagState):
-        pass
+        return {}
     
 
     graph.add_node("generate_query", generate_query_node)

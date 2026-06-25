@@ -1,7 +1,7 @@
 from openai import AsyncOpenAI
 
 class OpenaiEmbeddingService:
-    def __int__(self, api_key: str, model: str):
+    def __init__(self, api_key: str, model: str = "text-embedding-3-large"):
         self._model = model
         self._client = AsyncOpenAI(api_key=api_key)
 

@@ -1,52 +1,46 @@
+import logging
 from langgraph.graph import StateGraph, START, END
 
 from src.rag.state import RagState
 from src.rag.langgraph.workflows import compile_rag_workflow
 from src.integrations.protocols import ConversationClient
+from src.cache.protocols import CacheStore
+from src.llm.protocols import Agent
+from src.embeddings.protocols import EmbeddingService
 
-from ..intents import format_intents_for_prompt
 from ..state import ChatState
-from ..types import MessageRole, ChatMessage
+from ..actions import (
+    identify_intent, 
+    generate_fallback_reply, 
+    generate_plain_llm_reply, 
+    send_reply,
+    cache_outgoing_message_id
+)
 
+logger = logging.getLogger(__name__)
 
-def compile_chat_workflow(llm):
+def compile_chat_workflow(
+    llm: Agent, 
+    cache_store: CacheStore, 
+    conversation_client: ConversationClient,
+    embedding_service: EmbeddingService
+):
     graph = StateGraph(ChatState)
 
     async def identify_intent_node(state: ChatState):
-        available_intents = state["available_intents"]
-        intent_options = format_intents_for_prompt(available_intents)
-        system_prompt = f"""
-        Classify the user's latest message using the chat history if available.
-
-        Return exactly one of these labels:
-
-        {intent_options}
-
-        Do not explain your choice.
-        Return only the label.
-        """
-        messages = [
-            ChatMessage(
-                role=MessageRole.SYSTEM,
-                content=system_prompt
-            )
-        ]
-
-        for msg in state.get("chat_history", []):
-            messages.append(msg)
-
-        messages.append(ChatMessage(role=MessageRole.HUMAN, content=state["incoming_message"]))
-
         try:
-            response = await llm.ainvoke(messages)
-            content = str(response.content).strip().lower()
-            intent = content.split()[0] if content else "fallback"
-
-            if intent not in available_intents:
-                intent = "fallback"
-
-            return {"identified_intent": intent}
-
+            intent_response = await identify_intent(
+                llm=llm, 
+                available_intents=state["available_intents"],
+                incoming_message=state["incoming_message"],
+                chat_history=state.get("chat_history", [])
+            )
+            return {
+                "identified_intent": intent_response.intent,
+                "next_agent_instructions": intent_response.instructions,
+                "next_agent_context": intent_response.context
+            }
+        
         except Exception:
             errors = state.get("errors", [])
             errors.append("Error generating intent response")
@@ -75,7 +69,7 @@ def compile_chat_workflow(llm):
             chat_history=state.get("chat_history", [])
         )
 
-        workflow = compile_rag_workflow(llm)
+        workflow = compile_rag_workflow(llm=llm, embedding_service=embedding_service)
 
         final_rag_state = await workflow.ainvoke(rag_state)
         
@@ -96,20 +90,20 @@ def compile_chat_workflow(llm):
         
         return {"final_response": final_rag_state["generated_reply"]}
 
+
     async def appointments_workflow(state: ChatState):
         return {}
 
+
     async def plain_llm_node(state: ChatState):
-        messages = []
-
-        for msg in state.get("chat_history", []):
-            messages.append(msg)
-
-        messages.append(ChatMessage(role=MessageRole.HUMAN, content=state["incoming_message"]))
-
         try:
-            response = await llm.ainvoke(messages)
-            content = str(response.content).strip()
+            content = await generate_plain_llm_reply(
+                llm=llm,
+                incoming_message=state["incoming_message"],
+                chat_history=state.get("chat_history", []),
+                generated_context=state.get("next_agent_context", None),
+                generated_instructions=state.get("next_agent_instructions", None)
+            )
 
             return {"final_response": content}
             
@@ -122,39 +116,19 @@ def compile_chat_workflow(llm):
                 "identified_intent": "error"
             }
 
+
     async def fallback_node(state: ChatState):
-        system_prompt = """
-        The user's intent could not be confidently classified.
-
-        Use the chat history and the user's latest message to ask one concise clarification question.
-        Do not answer the user's request yet.
-        Do not mention internal labels, routing, classification, agents, or workflows.
-        If the message appears related to appointments, ask for the missing appointment detail.
-        If the message appears related to general business information, ask what specific service, product, policy, or topic they mean.
-        If the message is too vague, ask what they would like help with.
-
-        Keep the response friendly and under 30 words.
-        Only respond in the language of the conversation
-        """
-        messages = [
-            ChatMessage(
-                role=MessageRole.SYSTEM,
-                content=system_prompt
-            )
-        ]
-
-        for msg in state.get("chat_history", []):
-            messages.append(msg)
-
-        messages.append(ChatMessage(role=MessageRole.HUMAN, content=state["incoming_message"]))
-
         try:
-            response = await llm.ainvoke(messages)
-            content = str(response.content).strip()
+            content = await generate_fallback_reply( 
+                llm=llm,
+                incoming_message=state["incoming_message"],
+                chat_history=state.get("chat_history", []),
+                generated_context=state.get("next_agent_context", None),
+                generated_instructions=state.get("next_agent_instructions", None)
+            )
 
             return {"final_response": content}
             
-
         except Exception:
             errors = state.get("errors", [])
             errors.append("Error generating fallback response")
@@ -163,8 +137,38 @@ def compile_chat_workflow(llm):
                 "identified_intent": "error"
             }
 
+
     async def send_response_node(state: ChatState):
-        return {}
+        try:
+            message_id = await send_reply(
+                channel=state["channel"],
+                contact_id=state["contact_id"],
+                message=state["final_response"],
+                conversation_client=conversation_client
+            )
+
+            return {"outgoing_message_id": message_id}
+        
+        except Exception as e:
+            logger.error(e)
+            return {"outgoing_message_id": "error"}
+
+
+    async def cache_outgoing_message_id_node(state: ChatState):
+        try:
+            if state["outgoing_message_id"] != "error":
+                await cache_outgoing_message_id(
+                    contact_id=state["contact_id"],
+                    outgoing_message_id=state["outgoing_message_id"],
+                    channel=state["channel"],
+                    cache_store=cache_store
+                )
+
+            return {}
+        
+        except Exception as e: 
+            logger.error("Error caching message id")
+            return {}
 
     async def handle_errors_node(state: ChatState):
         return {}
@@ -176,6 +180,7 @@ def compile_chat_workflow(llm):
     graph.add_node("plain_llm", plain_llm_node)
     graph.add_node("fallback", fallback_node)
     graph.add_node("reply", send_response_node)
+    graph.add_node("cache_outgoing_message_id", cache_outgoing_message_id_node)
     graph.add_node("error", handle_errors_node)
 
     graph.add_edge(START, "identify_intent")
@@ -194,171 +199,8 @@ def compile_chat_workflow(llm):
     graph.add_edge("rag", "reply")
     graph.add_edge("plain_llm", "reply")
     graph.add_edge("fallback", "reply")
-    graph.add_edge("reply", END)
-    graph.add_edge("error", END)
-
-
-    return graph.compile()
-
-
-def compile_chat_orchestrator_workflow(conversation_client: ConversationClient, llm):
-    graph = StateGraph(ChatState)
-
-    async def identify_intent_node(state: ChatState):
-        available_intents = state["available_intents"]
-        intent_options = format_intents_for_prompt(available_intents)
-        system_prompt = f"""
-        Classify the user's latest message using the chat history if available.
-
-        Return exactly one of these labels:
-
-        {intent_options}
-
-        Do not explain your choice.
-        Return only the label.
-        """
-        messages = [
-            ChatMessage(
-                role=MessageRole.SYSTEM,
-                content=system_prompt
-            )
-        ]
-
-        for msg in state.get("chat_history", []):
-            messages.append(msg)
-
-        messages.append(ChatMessage(role=MessageRole.HUMAN, content=state["incoming_message"]))
-
-        try:
-            response = await llm.ainvoke(messages)
-            content = str(response.content).strip().lower()
-            intent = content.split()[0] if content else "fallback"
-
-            if intent not in available_intents:
-                intent = "fallback"
-
-            return {"identified_intent": intent}
-
-        except Exception:
-            errors = state.get("errors", [])
-            errors.append("Error generating intent response")
-            return {
-                "errors": errors,
-                "identified_intent": "error"
-            }
-        
-    def intent_decision(state: ChatState):
-        intent = state.get("identified_intent", "fallback")
-
-        if intent == "error":
-            return "error"
-
-        if intent not in state["available_intents"]:
-            return "fallback"
-
-        return intent
-
-    async def plain_llm_node(state: ChatState):
-        messages = []
-
-        for msg in state.get("chat_history", []):
-            messages.append(msg)
-
-        messages.append(ChatMessage(role=MessageRole.HUMAN, content=state["incoming_message"]))
-
-        try:
-            response = await llm.ainvoke(messages)
-            content = str(response.content).strip()
-
-            return {"final_response": content}
-            
-
-        except Exception:
-            errors = state.get("errors", [])
-            errors.append("Error generating plain LLM response")
-            return {
-                "errors": errors,
-                "identified_intent": "error"
-            }
-
-    async def fallback_node(state: ChatState):
-        system_prompt = """
-        The user's intent could not be confidently classified.
-
-        Use the chat history and the user's latest message to ask one concise clarification question.
-        Do not answer the user's request yet.
-        Do not mention internal labels, routing, classification, agents, or workflows.
-        If the message appears related to appointments, ask for the missing appointment detail.
-        If the message appears related to general business information, ask what specific service, product, policy, or topic they mean.
-        If the message is too vague, ask what they would like help with.
-
-        Keep the response friendly and under 30 words.
-        Only respond in the language of the conversation
-        """
-        messages = [
-            ChatMessage(
-                role=MessageRole.SYSTEM,
-                content=system_prompt
-            )
-        ]
-
-        for msg in state.get("chat_history", []):
-            messages.append(msg)
-
-        messages.append(ChatMessage(role=MessageRole.HUMAN, content=state["incoming_message"]))
-
-        try:
-            response = await llm.ainvoke(messages)
-            content = str(response.content).strip()
-
-            return {"final_response": content}
-            
-
-        except Exception:
-            errors = state.get("errors", [])
-            errors.append("Error generating fallback response")
-            return {
-                "errors": errors,
-                "identified_intent": "error"
-            }
-        
-    
-    async def delegate_response_node(state: ChatState):
-        return {}
-
-    async def send_response_node(state: ChatState):
-
-        return {}
-
-    async def handle_errors_node(state: ChatState):
-        return {}
-
-
-    graph.add_node("identify_intent", identify_intent_node)
-    graph.add_node("plain_llm", plain_llm_node)
-    graph.add_node("fallback", fallback_node)
-    graph.add_node("delegate_response", delegate_response_node)
-    graph.add_node("reply", send_response_node)
-    graph.add_node("error", handle_errors_node)
-
-
-
-    graph.add_edge(START, "identify_intent")
-    graph.add_conditional_edges(
-        "identify_intent",
-        intent_decision,
-        {
-            "rag": "delegate_response",
-            "appointments": "delegate_response",
-            "plain_llm": "plain_llm",
-            "fallback": "fallback",
-            "error": "error"
-        }
-    )
-
-    graph.add_edge("plain_llm", "reply")
-    graph.add_edge("fallback", "reply")
-    graph.add_edge("reply", END)
+    graph.add_edge("reply", "cache_outgoing_message_id")
+    graph.add_edge("cache_outgoing_message_id", END)
     graph.add_edge("error", END)
 
 

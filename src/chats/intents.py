@@ -1,8 +1,36 @@
 from typing_extensions import TypedDict
+from pydantic import BaseModel, Field
 
 
 class IntentDefinition(TypedDict):
     description: str
+
+
+
+class IntentStructure(BaseModel):
+    intent: str = Field(
+        description=(
+            "The selected intent label. Must be exactly one of the available intent labels "
+            "provided in the prompt, such as fallback, plain_llm, rag, or appointments."
+        )
+    )
+
+    context: str = Field(
+        description=(
+            "Relevant context extracted from the chat history and latest message that the next "
+            "agent needs. Include facts, preferences, dates, services mentioned, appointment details, "
+            "or prior user constraints. If there is no relevant context, return an empty string."
+        )
+    )
+
+    instructions: str = Field(
+        description=(
+            "Concise instructions for the next agent about how to handle the request. "
+            "Do not answer the user here. Do not include internal reasoning. "
+            "Only include guidance useful for the next step."
+        )
+    )
+
 
 INTENT_REGISTRY: dict[str, IntentDefinition] = {
     "fallback": {
@@ -18,6 +46,9 @@ INTENT_REGISTRY: dict[str, IntentDefinition] = {
         "description": "The user wants to book, cancel, reschedule, or ask about an appointment.",
     },
 }
+
+
+
 
 
 def build_available_intents(
@@ -44,3 +75,31 @@ def format_intents_for_prompt(intents: dict[str, IntentDefinition]) -> str:
         f"- {label}: {intent['description']}"
         for label, intent in intents.items()
     )
+
+
+
+def build_intent_classifier_prompt(intent_options: str) -> str:
+    return f"""
+    You are an intent router for a customer messaging agent.
+
+    Classify the user's latest message using the available intents and the chat history.
+
+    Available intents:
+    {intent_options}
+
+    Return a structured response with:
+    - intent: exactly one available intent label.
+    - context: relevant facts from the latest message and chat history that the next agent needs.
+    - instructions: concise guidance for the next agent about how to handle the request.
+
+    Rules:
+    - Choose only one of the available intent labels.
+    - Use chat history only to resolve references, follow-ups, missing context, and user preferences.
+    - Do not choose an intent that is not listed.
+    - Do not answer the user.
+    - Do not include private reasoning.
+    - Do not mention routing, classification, tools, agents, or workflows to the user.
+    - Keep context factual and grounded in the conversation.
+    - Keep instructions short and actionable.
+    - If the message is unclear, choose fallback and explain what needs clarification in instructions.
+    """
