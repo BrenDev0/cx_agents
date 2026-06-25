@@ -9,3 +9,10 @@ class User:
     email_hash: str
     password: str
     created_at: datetime
+
+
+@dataclass(frozen=True)
+class UserCreate:
+    email: str
+    email_hash: str
+    password: str
