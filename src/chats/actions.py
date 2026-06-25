@@ -7,7 +7,6 @@ from .intents import format_intents_for_prompt, build_intent_classifier_prompt, 
 from .cache_keys import get_last_message_id_key
 
 
-
 async def identify_intent(
     llm: Agent,
     available_intents: dict[str, IntentDefinition],
@@ -51,19 +50,19 @@ async def generate_plain_llm_reply(
     messages = []
     
 
-    if generated_context:
-        messages.append(ChatMessage(
-            role=MessageRole.SYSTEM,
-            content=f"\nADITIONAL CONTEXT\n{generated_context}"
-        ))
-        
-
     if generated_instructions:
         messages.append(ChatMessage(
             role=MessageRole.SYSTEM,
             content=f"\nINSTRUCTIONS\n{generated_instructions}"
-        ))
+    ))
 
+
+    if generated_context:
+        messages.append(ChatMessage(
+            role=MessageRole.SYSTEM,
+            content=f"\nCONVERSATION CONTEXT\n{generated_context}"
+        ))
+        
     messages.extend(chat_history or [])
 
     messages.append(ChatMessage(role=MessageRole.HUMAN, content=incoming_message))
@@ -102,26 +101,21 @@ async def generate_fallback_reply(
         )
     ]
 
-    if generated_context:
-        messages.append(ChatMessage(
-            role=MessageRole.SYSTEM,
-            content=f"\nADITIONAL CONTEXT\n{generated_context}"
-        ))
-        
-
     if generated_instructions:
         messages.append(ChatMessage(
             role=MessageRole.SYSTEM,
             content=f"\nINSTRUCTIONS\n{generated_instructions}"
         ))
 
-    
-
-
+    if generated_context:
+        messages.append(ChatMessage(
+            role=MessageRole.SYSTEM,
+            content=f"\nCONVERSATION CONTEXT\n{generated_context}"
+        ))
+        
     messages.extend(chat_history or [])
 
     messages.append(ChatMessage(role=MessageRole.HUMAN, content=incoming_message))
-
 
     llm.set_temperature(0.0)
     response = await llm.invoke(messages)
