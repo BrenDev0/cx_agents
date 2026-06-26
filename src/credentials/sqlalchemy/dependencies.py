@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, HTTPException, Request
-from src.db.dependencies import get_db_session
+from src.db.sqlalchemy.dependencies import get_db_session
 
 from .repository import create, get_by_external_id
 from ..types import CreateCredentialFn, GetCredentialByExternalIdFn
