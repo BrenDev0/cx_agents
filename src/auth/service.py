@@ -3,7 +3,7 @@ import asyncio
 from src.cache.types import CacheStore
 from src.exceptions import RequestBlockedException, BadRequestException
 from src.settings import settings
-from .cahce_keys import get_verification_attempts_key, get_registration_blocked_key, get_verification_code_key
+from .cache_keys import get_verification_attempts_key, get_registration_blocked_key, get_verification_code_key
 
 async def ensure_not_blocked_from_registration(
     email_hash: str,
