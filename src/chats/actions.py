@@ -1,5 +1,5 @@
 from src.integrations.protocols import ConversationClient
-from src.cache.protocols import CacheStore
+from src.cache.types import CacheStore
 from src.llm.protocols import Agent
 
 from src.types import ChatMessage, MessageRole

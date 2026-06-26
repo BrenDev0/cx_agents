@@ -4,7 +4,7 @@ from langgraph.graph import StateGraph, START, END
 from src.rag.state import RagState
 from src.rag.langgraph.workflows import compile_rag_workflow
 from src.integrations.protocols import ConversationClient
-from src.cache.protocols import CacheStore
+from src.cache.types import CacheStore
 from src.llm.protocols import Agent
 from src.embeddings.protocols import EmbeddingService
 

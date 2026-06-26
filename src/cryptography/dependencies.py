@@ -1,5 +1,5 @@
 from fastapi import Request
-from .protocols import CryptographyService
+from .types import CryptographyService
 
 def get_cryptography_service(request: Request) -> CryptographyService:
     service = getattr(request.app.state, "cryptography", None)

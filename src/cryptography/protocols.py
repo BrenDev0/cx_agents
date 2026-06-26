@@ -1,6 +1,0 @@
-from typing import Protocol
-
-class CryptographyService(Protocol):
-    def encrypt(self, data: str | int) -> str: ...
-
-    def decrypt(self ,encrypted: str) -> str: ...

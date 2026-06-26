@@ -4,4 +4,4 @@ from typing import Union
 class RegistrationRequest(BaseModel):
     email: str
     password: str
-    verification_code: Union[str, int]
+    verification_code: str | int

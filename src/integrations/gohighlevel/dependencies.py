@@ -3,7 +3,7 @@ from httpx import AsyncClient
 import logging
 
 from src.cryptography.dependencies import get_cryptography_service
-from src.cryptography.protocols import CryptographyService
+from src.cryptography.types import CryptographyService
 from src.credentials.sqlalchemy.dependencies import get_agent_credential
 from src.credentials.models import Credential
 

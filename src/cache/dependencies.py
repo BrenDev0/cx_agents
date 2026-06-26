@@ -1,7 +1,7 @@
 import logging
 from fastapi import Request, HTTPException
 
-from .protocols import CacheStore
+from .types import CacheStore
 
 logger = logging.getLogger(__name__)
 

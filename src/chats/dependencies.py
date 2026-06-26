@@ -1,7 +1,7 @@
 from fastapi import Depends
 
 from src.cache.dependencies import get_cache_store
-from src.cache.protocols import CacheStore
+from src.cache.types import CacheStore
 
 from .schemas import ChatRequest
 from .cache_keys import get_blocked_channel_key, get_last_message_id_key

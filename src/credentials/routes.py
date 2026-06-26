@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from src.cryptography.dependencies import get_cryptography_service
-from src.cryptography.protocols import CryptographyService
+from src.cryptography.types import CryptographyService
 
 from .sqlalchemy.dependencies import provide_create_credential
 from .types import CreateCredentialFn

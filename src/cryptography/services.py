@@ -1,4 +1,4 @@
-from .protocols import CryptographyService
+from .types import CryptographyService
 from .types import EncryptFn, DecryptFn
 
 class DefaultCryptographyService(CryptographyService):
