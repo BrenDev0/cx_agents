@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from httpx import AsyncClient
 
 from src.cache.redis import RedisCacheStore
@@ -9,6 +10,7 @@ from src.cryptography.services import DefaultCryptographyService
 from src.cryptography.encryption import encrypt, decrypt 
 from src.settings import settings
 from .router import router as api_router
+from .exception_hanlder import ExceptionHanlder
 
 
 @asynccontextmanager
@@ -41,6 +43,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_methods="*",
+    allow_origins=settings.ALLOW_ORIGINS,
+    allow_headers=["*"]
+)
+
+app.add_middleware(ExceptionHanlder)
 
 @app.middleware("http")
 async def db_session_middleware(
