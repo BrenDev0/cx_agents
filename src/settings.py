@@ -18,4 +18,7 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str
 
+    REGISTRATION_MAX_ATTEMPS: int = 5
+    LOGIN_MAX_ATTEMPS: int = 5
+
 settings = Settings() # type: ignore[call-arg]

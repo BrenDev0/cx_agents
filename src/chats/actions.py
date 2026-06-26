@@ -149,7 +149,7 @@ async def cache_outgoing_message_id(
             contact_id=contact_id,
             channel=channel
         )
-        await cache_store.store(key=key, data=outgoing_message_id, expire_seconds=60*60*24)
+        await cache_store.store_str(key=key, data=outgoing_message_id, expire_seconds=60*60*24)
         
     return {}
     

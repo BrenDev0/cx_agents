@@ -13,7 +13,7 @@ async def is_channel_blocked(
     channel = data.channel
     key = get_blocked_channel_key(contact_id=data.contact_id)
         
-    blocked_channels = await cache_store.get(key)
+    blocked_channels = await cache_store.get_bool(key)
 
     if blocked_channels and channel in blocked_channels:
         return True
@@ -28,14 +28,14 @@ async def _block_channel(
 ) -> None:
     key = get_blocked_channel_key(contact_id=contact_id)
 
-    blocked_channels = await cache_store.get(key) or {}
+    blocked_channels = await cache_store.get_json(key) or {}
 
     if not isinstance(blocked_channels, dict):
         raise TypeError("Blocked channels cache value must be a dictionary.")
 
     blocked_channels[channel] = "blocked"
 
-    await cache_store.store(
+    await cache_store.store_json(
         key,
         data=blocked_channels,
         expire_seconds=3500,
@@ -51,7 +51,7 @@ async def should_reply(
         return False
     
     key = get_last_message_id_key(contact_id=data.contact_id, channel=data.channel)
-    last_sent_id = await cache_store.get(key)
+    last_sent_id = await cache_store.get_str(key)
 
     if not last_sent_id:
         return True

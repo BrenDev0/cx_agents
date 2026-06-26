@@ -1,5 +1,4 @@
 import redis.asyncio as redis
-
 import json
 from typing import Any
 
@@ -8,26 +7,75 @@ class RedisCacheStore:
     def __init__(self, connection_url: str):
         self._redis = redis.from_url(connection_url)
 
-    async def store(
+    async def store_json(
         self,
         key: str,
-        data: dict[str, Any],
+        data: dict[str, Any] | list[Any],
         expire_seconds: int
-    )-> bool:
+    ) -> bool:
         result = await self._redis.set(
             name=key,
             value=json.dumps(data),
             ex=expire_seconds
         )
-
         return bool(result)
-    
-    async def get(self, key: str) -> Any | None:
+
+    async def store_str(
+        self,
+        key: str,
+        data: str,
+        expire_seconds: int
+    ) -> bool:
+        result = await self._redis.set(
+            name=key,
+            value=data,
+            ex=expire_seconds
+        )
+        return bool(result)
+
+    async def store_int(
+        self,
+        key: str,
+        data: int,
+        expire_seconds: int
+    ) -> bool:
+        result = await self._redis.set(
+            name=key,
+            value=str(data),  # explicit string conversion
+            ex=expire_seconds
+        )
+        return bool(result)
+
+    async def store_bool(
+        self,
+        key: str,
+        data: bool,
+        expire_seconds: int
+    ) -> bool:
+        result = await self._redis.set(
+            name=key,
+            value=str(data).lower(),
+            ex=expire_seconds
+        )
+        return bool(result)
+
+    async def get_json(self, key: str) -> dict[str, Any] | list[Any] | None:
+        data = await self._redis.get(name=key)
+        return json.loads(data) if data is not None else None
+
+    async def get_str(self, key: str) -> str | None:
+        data = await self._redis.get(name=key)
+        return data.decode() if data is not None else None
+
+    async def get_int(self, key: str) -> int | None:
+        data = await self._redis.get(name=key)
+        return int(data) if data is not None else None
+
+    async def get_bool(self, key: str) -> bool | None:
         data = await self._redis.get(name=key)
         if data is None:
             return None
-        
-        return json.loads(data)
+        return data.decode() == "true"
     
     async def expire(
         self, 

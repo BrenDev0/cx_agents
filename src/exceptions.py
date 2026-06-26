@@ -7,6 +7,7 @@ class ExceptionCategory(StrEnum):
     UNPROCESSABLE = "unprocessable"
     UNAUTHORIZED = "unauthorized"
     BAD_REQUEST = "bad request"
+    BLOCKED = "blocked"
 
 
 
@@ -28,3 +29,11 @@ class NotFoundException(AppError):
 class ForbiddenException(AppError):
     def __init__(self, detail: str = "Forbidden"):
         super().__init__(detail=detail, category=ExceptionCategory.FORBIDDEN)
+
+class BadRequestException(AppError):
+    def __init__(self, detail: str = "Bad Request"):
+        super().__init__(detail=detail, category=ExceptionCategory.BAD_REQUEST)
+
+class RequestBlockedException(AppError):
+    def __init__(self, detail: str = "Too many requests"):
+        super().__init__(detail=detail, category=ExceptionCategory.BLOCKED)
