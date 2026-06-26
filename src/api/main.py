@@ -8,6 +8,7 @@ from src.cache.redis import RedisCacheStore
 from src.db.sqlalchemy.core import engine
 from src.cryptography.services import DefaultCryptographyService
 from src.cryptography.encryption import encrypt, decrypt 
+from src.cryptography.hashing import deterministic_hash, hash_password, verify_password
 from src.settings import settings
 from .router import router as api_router
 from .exception_hanlder import ExceptionHanlder
@@ -23,7 +24,10 @@ async def lifespan(app: FastAPI):
 
     cryptography_service = DefaultCryptographyService(
         encrypt=encrypt,
-        decrypt=decrypt
+        decrypt=decrypt,
+        hash_password=hash_password,
+        verify_password=verify_password,
+        deterministic_hash=deterministic_hash
     )
     app.state.cryptography = cryptography_service
 

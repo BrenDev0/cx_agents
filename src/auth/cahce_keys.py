@@ -1,4 +1,5 @@
 from enum import StrEnum
+from uuid import UUID
 
 class AuthCacheKey(StrEnum):
     VERIFICATION_CODE = "auth:registration:verification-code"
@@ -6,6 +7,7 @@ class AuthCacheKey(StrEnum):
     REGISTRATION_BLOCKED = "auth:registration:blocked"
     LOGIN_ATTEMPS = "auth:login:attempts"
     LOGIN_BLOCKED = "auth:login:blocked"
+    SESSION = "auth:session"
 
 
 def get_verification_code_key(email_hash: str) -> str:
@@ -22,3 +24,6 @@ def get_login_attemps_key(email: str) -> str:
 
 def get_login_blocked_key(email: str) -> str:
     return f"{email}:{AuthCacheKey.LOGIN_BLOCKED}"
+
+def get_session_key(session_id: UUID) -> str:
+    return f"{AuthCacheKey.SESSION}:{session_id}"

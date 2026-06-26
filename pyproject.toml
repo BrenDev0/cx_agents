@@ -16,6 +16,7 @@ dependencies = [
     "asyncpg>=0.31.0",
     "sqlalchemy[asyncio]>=2.0.51",
     "cryptography>=49.0.0",
+    "bcrypt>=5.0.0",
 ]
 
 [dependency-groups]
