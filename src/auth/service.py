@@ -1,5 +1,5 @@
 import asyncio
-
+import secrets
 from src.cache.types import CacheStore
 from src.exceptions import RequestBlockedException, BadRequestException
 from src.settings import settings
@@ -58,5 +58,12 @@ async def verify_code_or_raise(
     )
 
     return True
-    
 
+
+def generate_random_code(
+    length: int = 6
+) -> int:
+    min_value = 10 ** (length -1)
+    max_value = (10 ** length) - 1
+    
+    return secrets.randbelow(max_value - min_value) + min_value
