@@ -33,10 +33,13 @@ class Aioboto3ObjectStore:
 
         return key
 
-    async def get_object(self, key: str) -> bytes:
+    async def get_object(self, key: str, expires_in: int = 900) -> str:
         async with self._client() as s3:
-            response = await s3.get_object(Bucket=self._bucket_name, Key=key)
-            return await response["Body"].read()
+            return await s3.generate_presigned_url(
+                ClientMethod="get_object",
+                Params={"Bucket": self._bucket_name, "Key": key},
+                ExpiresIn=expires_in
+            )
 
     async def delete_object(self, key: str) -> bool:
         async with self._client() as s3:
