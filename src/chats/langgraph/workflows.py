@@ -7,6 +7,7 @@ from src.integrations.types import ConversationClient
 from src.cache.types import CacheStore
 from src.llm.types import Agent
 from src.embeddings.types import EmbeddingService
+from src.vector_store.types import VectorStore
 
 from ..state import ChatState
 from ..actions import (
@@ -20,10 +21,11 @@ from ..actions import (
 logger = logging.getLogger(__name__)
 
 def compile_chat_workflow(
-    llm: Agent, 
-    cache_store: CacheStore, 
+    llm: Agent,
+    cache_store: CacheStore,
     conversation_client: ConversationClient,
-    embedding_service: EmbeddingService
+    embedding_service: EmbeddingService,
+    vector_store: VectorStore
 ):
     graph = StateGraph(ChatState)
 
@@ -63,13 +65,19 @@ def compile_chat_workflow(
 
 
     async def rag_workflow(state: ChatState):
-        rag_state = RagState(
-            contact_id=state["contact_id"],
-            incoming_message=state["incoming_message"],
-            chat_history=state.get("chat_history", [])
-        )
+        rag_state: RagState = {
+            "contact_id": state["contact_id"],
+            "incoming_message": state["incoming_message"],
+            "chat_history": state.get("chat_history", [])
+        }
 
-        workflow = compile_rag_workflow(llm=llm, embedding_service=embedding_service)
+        if state.get("next_agent_context"):
+            rag_state["next_agent_context"] = state["next_agent_context"]
+
+        if state.get("next_agent_instructions"):
+            rag_state["next_agent_instructions"] = state["next_agent_instructions"]
+
+        workflow = compile_rag_workflow(llm=llm, embedding_service=embedding_service, vector_store=vector_store)
 
         final_rag_state = await workflow.ainvoke(rag_state)
         
