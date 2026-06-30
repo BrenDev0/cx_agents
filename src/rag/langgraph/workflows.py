@@ -2,7 +2,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph.state import CompiledStateGraph
 
 from src.types import ChatMessage, MessageRole
-from src.embeddings.protocols import EmbeddingService
+from src.embeddings.types import EmbeddingService
 from src.llm.protocols import Agent
 from ..state import RagState
 

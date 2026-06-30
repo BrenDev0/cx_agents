@@ -8,7 +8,7 @@ from src.credentials.sqlalchemy.dependencies import get_agent_credential
 from src.credentials.models import Credential
 
 from .client import GoHighLevelClient
-from ..protocols import ConversationClient
+from ..types import ConversationClient
 
 logger = logging.getLogger(__name__)
 

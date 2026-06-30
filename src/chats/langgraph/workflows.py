@@ -3,10 +3,10 @@ from langgraph.graph import StateGraph, START, END
 
 from src.rag.state import RagState
 from src.rag.langgraph.workflows import compile_rag_workflow
-from src.integrations.protocols import ConversationClient
+from src.integrations.types import ConversationClient
 from src.cache.types import CacheStore
 from src.llm.protocols import Agent
-from src.embeddings.protocols import EmbeddingService
+from src.embeddings.types import EmbeddingService
 
 from ..state import ChatState
 from ..actions import (

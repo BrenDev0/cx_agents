@@ -1,4 +1,4 @@
-from src.integrations.protocols import ConversationClient
+from src.integrations.types import ConversationClient
 from src.cache.types import CacheStore
 from src.llm.protocols import Agent
 

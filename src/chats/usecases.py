@@ -1,4 +1,4 @@
-from src.integrations.protocols import ConversationClient
+from src.integrations.types import ConversationClient
 
 from src.types import MessageRole, ChatMessage
 from .schemas import ChatRequest

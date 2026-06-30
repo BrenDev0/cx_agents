@@ -1,7 +1,7 @@
 import logging
 from fastapi import Request, HTTPException
 
-from .protocols import EmbeddingService
+from .types import EmbeddingService
 
 
 logger = logging.getLogger(__name__)
