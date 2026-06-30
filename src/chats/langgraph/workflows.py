@@ -65,11 +65,17 @@ def compile_chat_workflow(
 
 
     async def rag_workflow(state: ChatState):
-        rag_state = RagState(
-            contact_id=state["contact_id"],
-            incoming_message=state["incoming_message"],
-            chat_history=state.get("chat_history", [])
-        )
+        rag_state: RagState = {
+            "contact_id": state["contact_id"],
+            "incoming_message": state["incoming_message"],
+            "chat_history": state.get("chat_history", [])
+        }
+
+        if state.get("next_agent_context"):
+            rag_state["next_agent_context"] = state["next_agent_context"]
+
+        if state.get("next_agent_instructions"):
+            rag_state["next_agent_instructions"] = state["next_agent_instructions"]
 
         workflow = compile_rag_workflow(llm=llm, embedding_service=embedding_service, vector_store=vector_store)
 

@@ -68,7 +68,9 @@ def compile_rag_workflow(
             reply = await generate_rag_reply(
                 llm=llm,
                 prompt=state["prompt"],
-                chat_history=state.get("chat_history", [])
+                chat_history=state.get("chat_history", []),
+                generated_context=state.get("next_agent_context"),
+                generated_instructions=state.get("next_agent_instructions")
             )
             return {"generated_reply": reply}
 

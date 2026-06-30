@@ -31,9 +31,9 @@ async def identify_intent(
 
     response = await llm.invoke_structured(messages, IntentStructure)
 
-    intent = response.intent if response.intent else "fallback"
+    intent = (response.intent or "fallback").lower()
 
-    if intent.lower() not in available_intents:
+    if intent not in available_intents:
         intent = "fallback"
 
     response.intent = intent

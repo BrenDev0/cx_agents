@@ -64,9 +64,23 @@ def build_rag_prompt(
 async def generate_rag_reply(
     llm: Agent,
     prompt: str,
-    chat_history: list[ChatMessage] | None = None
+    chat_history: list[ChatMessage] | None = None,
+    generated_context: str | None = None,
+    generated_instructions: str | None = None
 ) -> str:
     messages = []
+
+    if generated_instructions:
+        messages.append(ChatMessage(
+            role=MessageRole.SYSTEM,
+            content=f"\nINSTRUCTIONS\n{generated_instructions}"
+        ))
+
+    if generated_context:
+        messages.append(ChatMessage(
+            role=MessageRole.SYSTEM,
+            content=f"\nCONVERSATION CONTEXT\n{generated_context}"
+        ))
 
     messages.extend(chat_history or [])
 
