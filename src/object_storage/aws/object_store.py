@@ -2,7 +2,7 @@ import aioboto3
 import io
 
 
-class Aioboto3ObjectStore:
+class AwsObjectStore:
     def __init__(
         self,
         bucket_name: str,
