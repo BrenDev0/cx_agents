@@ -1,7 +1,7 @@
 from typing import Any, Protocol
 from uuid import UUID
 
-from src.embeddings.models import DocumentChunk, EmbeddingResult
+from .models import DocumentChunk, EmbeddingResult
 
 
 class VectorStore(Protocol):

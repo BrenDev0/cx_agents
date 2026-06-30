@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from .models import DocumentChunk
+from src.vector_store.models import DocumentChunk
 
 class EmbeddingService(Protocol):
     async def embed_query(
