@@ -14,6 +14,7 @@ from src.db.sqlalchemy.core import engine
 from src.llm.langchain.agents import LangchainAgent
 from src.llm.langchain.models import Provider
 from src.embeddings.openai.service import OpenaiEmbeddingService
+from src.vector_store.qdrant.vector_store import QdrantVectorStore
 
 
 def _get_db_for_task():
@@ -26,6 +27,7 @@ async def _workflow_invoker(location_id: str,  state: ChatState):
       db = None
       cache_store = None
       ghl_http = None
+      vector_store = None
 
       llm = LangchainAgent(
          model="gpt-4o",
@@ -35,6 +37,12 @@ async def _workflow_invoker(location_id: str,  state: ChatState):
 
       embedding_service = OpenaiEmbeddingService(
          api_key=settings.OPENAI_API_KEY
+      )
+
+      vector_store = QdrantVectorStore(
+         url=settings.QDRANT_URL,
+         api_key=settings.QDRANT_API_KEY,
+         collection_name=settings.QDRANT_COLLECTION_NAME
       )
 
       cache_store = RedisCacheStore(connection_url=settings.REDIS_URL)
@@ -60,10 +68,11 @@ async def _workflow_invoker(location_id: str,  state: ChatState):
       )
 
       workflow = compile_chat_workflow(
-         llm=llm, 
+         llm=llm,
          conversation_client=conversation_client,
          cache_store=cache_store,
-         embedding_service=embedding_service
+         embedding_service=embedding_service,
+         vector_store=vector_store
       )
 
       return await workflow.ainvoke(state)
@@ -75,6 +84,8 @@ async def _workflow_invoker(location_id: str,  state: ChatState):
          await cache_store.close_connection()
       if ghl_http:
          await ghl_http.aclose()
+      if vector_store:
+         await vector_store.close()
    
 
 
