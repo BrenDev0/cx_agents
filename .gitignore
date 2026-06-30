@@ -1,5 +1,7 @@
 uv.lock
 .python-version
+.mypy_cache
+.ruff_cache
 # Python-generated files
 __pycache__/
 *.py[oc]
