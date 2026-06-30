@@ -18,6 +18,11 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str
 
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_ACCESS_KEY: str
+    AWS_REGION_NAME: str
+    AWS_BUCKET_NAME: str
+
     REGISTRATION_MAX_ATTEMPS: int = 5
     LOGIN_MAX_ATTEMPS: int = 5
 
