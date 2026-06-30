@@ -11,6 +11,7 @@ def row_to_domain(row: DocumentRow) -> Document:
         user_id=row.user_id,
         file_type=row.file_type,
         name=row.name,
-        url=row.url,
+        key=row.key,
+        file_size=row.file_size,
         created_at=row.created_at
     )

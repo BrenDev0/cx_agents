@@ -9,7 +9,8 @@ class Document:
     user_id: UUID
     file_type: str
     name: str
-    url: str
+    key: str
+    file_size: int
     created_at: datetime
 
 
@@ -18,4 +19,5 @@ class DocumentCreate:
     user_id: UUID
     file_type: str
     name: str
-    url: str
+    key: str
+    file_size: int
