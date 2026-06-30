@@ -1,5 +1,4 @@
 from typing import Callable, Protocol
-from typing import Protocol
 
 
 EncryptFn = Callable[[str | int], str]

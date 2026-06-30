@@ -1,4 +1,4 @@
-from typing import Callable, Awaitable, Any
+from typing import Callable, Awaitable
 from .models import CredentialPartial, Credential
 
 

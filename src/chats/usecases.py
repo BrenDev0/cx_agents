@@ -1,5 +1,3 @@
-from src.integrations.types import ConversationClient
-
 from src.types import MessageRole, ChatMessage
 from .schemas import ChatRequest
 from .state import ChatState

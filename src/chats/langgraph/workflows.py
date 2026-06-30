@@ -166,7 +166,7 @@ def compile_chat_workflow(
 
             return {}
         
-        except Exception as e: 
+        except Exception: 
             logger.error("Error caching message id")
             return {}
 

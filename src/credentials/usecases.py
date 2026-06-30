@@ -1,5 +1,5 @@
 from src.cryptography.types import EncryptFn
-from .models import Credential, CredentialPartial
+from .models import CredentialPartial
 from .types import CreateCredentialFn
 from .schemas import CreateCredentialRequest, CredentialPublic
 
