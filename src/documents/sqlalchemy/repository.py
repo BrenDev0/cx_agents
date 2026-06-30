@@ -15,8 +15,8 @@ async def create(db: AsyncSession, document_in: DocumentCreate) -> Document:
     return row_to_domain(row)
 
 
-async def delete_by_id(db: AsyncSession, id: UUID) ->  Document | None:
-    stmt = delete(DocumentRow).where(DocumentRow.id == id).returning(DocumentRow)
+async def delete_by_id(db: AsyncSession, document_id: UUID, user_id: UUID) ->  Document | None:
+    stmt = delete(DocumentRow).where(DocumentRow.id == document_id).where(DocumentRow.user_id == user_id).returning(DocumentRow)
 
     result = await db.execute(stmt)
 
