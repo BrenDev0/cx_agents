@@ -7,8 +7,9 @@ from httpx import AsyncClient
 from src.cache.redis import RedisCacheStore
 from src.db.sqlalchemy.core import engine
 from src.cryptography.services import DefaultCryptographyService
-from src.cryptography.encryption import encrypt, decrypt 
+from src.cryptography.encryption import encrypt, decrypt
 from src.cryptography.hashing import deterministic_hash, hash_password, verify_password
+from src.object_storage.aws.object_store import Aioboto3ObjectStore
 from src.settings import settings
 from .router import router as api_router
 from .exception_hanlder import ExceptionHanlder
@@ -35,6 +36,13 @@ async def lifespan(app: FastAPI):
     app.state.ghl_http = AsyncClient(
         base_url="https://services.leadconnectorhq.com",
         timeout=30.0,
+    )
+
+    app.state.object_store = Aioboto3ObjectStore(
+        bucket_name=settings.AWS_BUCKET_NAME,
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=settings.AWS_REGION_NAME
     )
 
     try:
