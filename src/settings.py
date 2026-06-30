@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     AWS_REGION_NAME: str
     AWS_BUCKET_NAME: str
 
+    QDRANT_URL: str
+    QDRANT_API_KEY: str | None = None
+    QDRANT_COLLECTION_NAME: str
+
     REGISTRATION_MAX_ATTEMPS: int = 5
     LOGIN_MAX_ATTEMPS: int = 5
 

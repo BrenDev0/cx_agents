@@ -9,7 +9,8 @@ from src.db.sqlalchemy.core import engine
 from src.cryptography.services import DefaultCryptographyService
 from src.cryptography.encryption import encrypt, decrypt
 from src.cryptography.hashing import deterministic_hash, hash_password, verify_password
-from src.object_storage.aws.object_store import Aioboto3ObjectStore
+from src.object_storage.aws.object_store import AwsObjectStore
+from src.vector_store.qdrant.vector_store import QdrantVectorStore
 from src.settings import settings
 from .router import router as api_router
 from .exception_hanlder import ExceptionHanlder
@@ -38,19 +39,27 @@ async def lifespan(app: FastAPI):
         timeout=30.0,
     )
 
-    app.state.object_store = Aioboto3ObjectStore(
+    app.state.object_store = AwsObjectStore(
         bucket_name=settings.AWS_BUCKET_NAME,
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
         region_name=settings.AWS_REGION_NAME
     )
 
+    vector_store = QdrantVectorStore(
+        url=settings.QDRANT_URL,
+        api_key=settings.QDRANT_API_KEY,
+        collection_name=settings.QDRANT_COLLECTION_NAME
+    )
+    app.state.vector_store = vector_store
+
     try:
         yield
-    
+
     finally:
         await cache_store.close_connection()
         await app.state.ghl_http.aclose()
+        await vector_store.close()
 
 
 app = FastAPI(lifespan=lifespan)
