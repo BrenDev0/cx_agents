@@ -1,9 +1,9 @@
-from pydantic import BaseModel
+from src.schemas import ApiSchema
 from uuid import UUID
 from datetime import datetime
 
 
-class UploadedDocumentResponse(BaseModel):
+class DocumentResponse(ApiSchema):
     id: UUID
     name: str
     file_type: str
