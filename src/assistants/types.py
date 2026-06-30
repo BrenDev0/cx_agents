@@ -3,7 +3,7 @@ from typing import Callable, Awaitable, Protocol
 from .models import Assistant, AssistantCreate
 
 CreateAssistantFn = Callable[[AssistantCreate], Awaitable[Assistant]]
-CollectionByUserIdFn = Callable[[UUID], Awaitable[Assistant]]
+GetUsersAssistantsFn = Callable[[UUID], Awaitable[Assistant]]
 
 class GetAssistantByIdFn(Protocol):
     async def __call__(*assistant_id: UUID, user_id: UUID) -> Assistant | None: ...
