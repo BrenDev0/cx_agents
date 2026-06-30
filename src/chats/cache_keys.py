@@ -6,9 +6,10 @@ class ChatCacheKey(StrEnum):
 
 
 def get_blocked_channel_key(
-    contact_id: str
+    contact_id: str,
+    channel: str
 ) -> str:
-    return f"{contact_id}:{ChatCacheKey.BLOCKED_CHANNELS}"
+    return f"{contact_id}:{ChatCacheKey.BLOCKED_CHANNELS}:{channel}"
 
 
 def get_last_message_id_key(

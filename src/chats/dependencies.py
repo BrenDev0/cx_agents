@@ -8,17 +8,11 @@ from .cache_keys import get_blocked_channel_key, get_last_message_id_key
 
 async def is_channel_blocked(
     data: ChatRequest,
-    cache_store: CacheStore = Depends(get_cache_store) 
+    cache_store: CacheStore = Depends(get_cache_store)
 ) -> bool:
-    channel = data.channel
-    key = get_blocked_channel_key(contact_id=data.contact_id)
-        
-    blocked_channels = await cache_store.get_bool(key)
+    key = get_blocked_channel_key(contact_id=data.contact_id, channel=data.channel)
 
-    if blocked_channels and channel in blocked_channels:
-        return True
-    
-    return False
+    return bool(await cache_store.get_bool(key))
 
 
 async def _block_channel(
@@ -26,18 +20,11 @@ async def _block_channel(
     contact_id: str,
     channel: str,
 ) -> None:
-    key = get_blocked_channel_key(contact_id=contact_id)
+    key = get_blocked_channel_key(contact_id=contact_id, channel=channel)
 
-    blocked_channels = await cache_store.get_json(key) or {}
-
-    if not isinstance(blocked_channels, dict):
-        raise TypeError("Blocked channels cache value must be a dictionary.")
-
-    blocked_channels[channel] = "blocked"
-
-    await cache_store.store_json(
+    await cache_store.store_bool(
         key,
-        data=blocked_channels,
+        data=True,
         expire_seconds=3500,
     )
 
@@ -57,13 +44,18 @@ async def should_reply(
         return True
 
     outbound_messages = [
-        message.id for message in data.chat_history if message.get("direction", "") == "outbound"
+        message["id"] for message in data.chat_history if message.get("direction", "") == "outbound"
     ]
 
-    if str(last_sent_id) == str(outbound_messages[0]):
+    if outbound_messages and str(last_sent_id) == str(outbound_messages[-1]):
         return True
-    
-    
+
+    await _block_channel(
+        cache_store=cache_store,
+        channel=data.channel,
+        contact_id=data.contact_id
+    )
+
     return False
 
     

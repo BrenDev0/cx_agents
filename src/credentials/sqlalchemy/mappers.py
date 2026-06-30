@@ -7,7 +7,8 @@ def row_to_domain(row: CredentialRow) -> Credential:
     return Credential(
         id=row.id,
         external_id=row.external_id,
-        access_token=row.acccess_token
+        access_token=row.acccess_token,
+        created_at=row.created_at
     )
 
 def domain_partial_to_row(partial: CredentialPartial) -> CredentialRow:

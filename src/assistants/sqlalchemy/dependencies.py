@@ -15,13 +15,13 @@ def provide_create_assistant(db: AsyncSession = Depends(get_db_session)) -> Crea
 
 def provide_get_users_assistants(db: AsyncSession = Depends(get_db_session)) -> GetUsersAssistantsFn:
     async def get_users_assistants(user_id: UUID) -> list[Assistant]:
-        return collection_by_user_id(db=db, user_id=user_id)
+        return await collection_by_user_id(db=db, user_id=user_id)
     
     return get_users_assistants
 
 
 def  provide_delete_assistant_by_id(db: AsyncSession = Depends(get_db_session)) -> DeleteAssistantById:
     async def delete_assistant_by_id(assistant_id: UUID, user_id: UUID) -> Assistant | None:
-        return delete_by_id(db=db, assistant_id=assistant_id, user_id=user_id)
+        return await delete_by_id(db=db, assistant_id=assistant_id, user_id=user_id)
     
     return delete_assistant_by_id

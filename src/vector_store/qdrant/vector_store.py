@@ -41,14 +41,17 @@ class QdrantVectorStore:
             query_filter=self._build_filter(filter)
         )
 
-        return [
-            DocumentChunk(
-                content=point.payload["content"],
-                metadata=point.payload.get("metadata", {}),
+        chunks = []
+
+        for point in results.points:
+            payload = point.payload or {}
+            chunks.append(DocumentChunk(
+                content=payload["content"],
+                metadata=payload.get("metadata", {}),
                 chunk_id=UUID(str(point.id))
-            )
-            for point in results.points
-        ]
+            ))
+
+        return chunks
 
     async def delete(self, chunk_ids: list[UUID]) -> bool:
         await self._client.delete(
@@ -59,9 +62,14 @@ class QdrantVectorStore:
         return True
 
     async def delete_by_filter(self, filter: dict[str, Any]) -> bool:
+        built_filter = self._build_filter(filter)
+
+        if built_filter is None:
+            return False
+
         await self._client.delete(
             collection_name=self._collection_name,
-            points_selector=models.FilterSelector(filter=self._build_filter(filter))
+            points_selector=models.FilterSelector(filter=built_filter)
         )
 
         return True

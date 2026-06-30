@@ -1,6 +1,8 @@
 from pydantic import SecretStr
-from .models import get_model, Provider
 from typing import TypeVar
+from src.types import ChatMessage
+from .models import get_model, Provider
+
 
 
 T = TypeVar("T")
@@ -25,7 +27,7 @@ class LangchainAgent:
 
     async def invoke(
         self,
-        messages: list[dict]
+        messages: list[ChatMessage]
     ) -> str:
         
         response = await self._llm.ainvoke(messages)
@@ -35,7 +37,7 @@ class LangchainAgent:
     
     async def invoke_structured(
         self,
-        messages: list[dict],
+        messages: list[ChatMessage],
         response_model: type[T]
     ) -> T:
         structured_llm = self._llm.with_structured_output(response_model)

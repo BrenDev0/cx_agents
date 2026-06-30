@@ -12,6 +12,7 @@ from src.credentials.sqlalchemy.repository import get_by_external_id
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from src.db.sqlalchemy.core import engine
 from src.llm.langchain.agents import LangchainAgent
+from src.llm.langchain.models import Provider
 from src.embeddings.openai.service import OpenaiEmbeddingService
 
 
@@ -28,7 +29,7 @@ async def _workflow_invoker(location_id: str,  state: ChatState):
 
       llm = LangchainAgent(
          model="gpt-4o",
-         provider="openai",
+         provider=Provider.OPENAI,
          api_key=SecretStr(settings.OPENAI_API_KEY)
       )
 
