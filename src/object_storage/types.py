@@ -1,0 +1,9 @@
+from typing import Protocol
+
+
+class ObjectStore(Protocol):
+    async def upload(self, key: str, file_bytes: bytes) -> str: ...
+
+    async def get_object(self, key: str, expires_in: int = 900) -> str: ...
+
+    async def delete_object(self, key: str) -> bool: ...

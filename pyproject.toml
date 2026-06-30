@@ -17,6 +17,8 @@ dependencies = [
     "sqlalchemy[asyncio]>=2.0.51",
     "cryptography>=49.0.0",
     "bcrypt>=5.0.0",
+    "aioboto3>=15.5.0",
+    "qdrant-client>=1.18.0",
 ]
 
 [dependency-groups]

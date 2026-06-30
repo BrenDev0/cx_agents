@@ -1,6 +1,6 @@
 from src.integrations.types import ConversationClient
 from src.cache.types import CacheStore
-from src.llm.protocols import Agent
+from src.llm.types import Agent
 
 from src.types import ChatMessage, MessageRole
 from .intents import format_intents_for_prompt, build_intent_classifier_prompt, IntentStructure, IntentDefinition
@@ -11,7 +11,7 @@ async def identify_intent(
     llm: Agent,
     available_intents: dict[str, IntentDefinition],
     incoming_message: str,
-    chat_history: list[ChatMessage] = None
+    chat_history: list[ChatMessage] | None = None
 ):
     available_intents = available_intents
     intent_options = format_intents_for_prompt(available_intents)
@@ -43,9 +43,9 @@ async def identify_intent(
 async def generate_plain_llm_reply(
     llm: Agent,
     incoming_message: str,
-    chat_history: list[ChatMessage] = None,
-    generated_context: str = None,
-    generated_instructions: str = None
+    chat_history: list[ChatMessage] | None = None,
+    generated_context: str | None = None,
+    generated_instructions: str | None = None
 ):
     messages = []
     
@@ -76,9 +76,9 @@ async def generate_plain_llm_reply(
 async def generate_fallback_reply(
     llm: Agent,
     incoming_message: str,
-    chat_history: list[ChatMessage] = [],
-    generated_context: str = None,
-    generated_instructions: str = None
+    chat_history: list[ChatMessage] | None = None,
+    generated_context: str | None = None,
+    generated_instructions: str | None = None
 ):
     system_prompt = """
     The user's intent could not be confidently classified.
@@ -129,13 +129,13 @@ async def send_reply(
     message: str,
     conversation_client: ConversationClient
 ):
-    message = await conversation_client.send_message(
+    response = await conversation_client.send_message(
         channel=channel,
         contact_id=contact_id,
         message=message
     )
 
-    return message["id"]
+    return response["id"]
 
 
 async def cache_outgoing_message_id(

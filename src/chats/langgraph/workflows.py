@@ -5,7 +5,7 @@ from src.rag.state import RagState
 from src.rag.langgraph.workflows import compile_rag_workflow
 from src.integrations.types import ConversationClient
 from src.cache.types import CacheStore
-from src.llm.protocols import Agent
+from src.llm.types import Agent
 from src.embeddings.types import EmbeddingService
 
 from ..state import ChatState
@@ -166,7 +166,7 @@ def compile_chat_workflow(
 
             return {}
         
-        except Exception as e: 
+        except Exception: 
             logger.error("Error caching message id")
             return {}
 

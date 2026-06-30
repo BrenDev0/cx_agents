@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, Request, Response
 from uuid import UUID
-from src.settings import settings
 from src.cryptography.dependencies import get_cryptography_service
 from src.cryptography.types import CryptographyService
 from src.users.sqlalchemy.dependencies import provide_create_user, provide_get_user_by_email_hash

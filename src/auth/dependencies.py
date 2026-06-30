@@ -46,7 +46,7 @@ async def get_current_user(
     cached_user = await cache_store.get_json(current_user_cache_key)
 
     if cached_user:
-        return User(cached_user)
+        return User(**cached_user)
 
     
     current_user = await get_user_by_id(user_id)

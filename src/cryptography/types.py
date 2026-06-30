@@ -1,5 +1,4 @@
 from typing import Callable, Protocol
-from typing import Protocol
 
 
 EncryptFn = Callable[[str | int], str]
@@ -25,4 +24,4 @@ class CryptographyService(Protocol):
     
     def hash_password(self, str_to_hash: str) -> str: ...
 
-    def verify_password(unhashed_password: str, hashed_password: str) -> bool: ...
+    def verify_password(self, unhashed_password: str, hashed_password: str) -> bool: ...

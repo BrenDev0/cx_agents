@@ -1,4 +1,4 @@
-from sqlalchemy import delete
+from sqlalchemy import select, delete
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..models import Document, DocumentCreate
@@ -15,8 +15,18 @@ async def create(db: AsyncSession, document_in: DocumentCreate) -> Document:
     return row_to_domain(row)
 
 
-async def delete_by_id(db: AsyncSession, id: UUID) ->  Document | None:
-    stmt = delete(DocumentRow).where(DocumentRow.id == id).returning(DocumentRow)
+async def get_by_id(db: AsyncSession, document_id: UUID, user_id: UUID) -> Document | None:
+    stmt = select(DocumentRow).where(DocumentRow.id == document_id).where(DocumentRow.user_id == user_id)
+
+    result = await db.execute(stmt)
+
+    row = result.scalar_one_or_none()
+
+    return row_to_domain(row) if row else None
+
+
+async def delete_by_id(db: AsyncSession, document_id: UUID, user_id: UUID) ->  Document | None:
+    stmt = delete(DocumentRow).where(DocumentRow.id == document_id).where(DocumentRow.user_id == user_id).returning(DocumentRow)
 
     result = await db.execute(stmt)
 
