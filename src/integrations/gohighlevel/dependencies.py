@@ -1,3 +1,4 @@
+import json
 from fastapi import Request, HTTPException, Depends
 from httpx import AsyncClient
 import logging
@@ -28,9 +29,11 @@ def get_ghl_client(
     credential: Credential = Depends(get_agent_credential),
     cryptography_service: CryptographyService = Depends(get_cryptography_service)
 ):
+    payload = json.loads(cryptography_service.decrypt(credential.payload))
+
     return GoHighLevelClient(
         http=http,
-        pit=cryptography_service.decrypt(credential.access_token)
+        pit=payload["access_token"]
     )
     
 

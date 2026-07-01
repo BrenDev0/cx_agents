@@ -1,6 +1,6 @@
 from typing import Callable, Awaitable
-from .models import CredentialPartial, Credential
+from .models import CredentialCreate, Credential, Provider
 
 
-CreateCredentialFn = Callable[[CredentialPartial], Awaitable[Credential]]
-GetCredentialByExternalIdFn = Callable[[str], Awaitable[Credential | None]]
+CreateCredentialFn = Callable[[CredentialCreate], Awaitable[Credential]]
+GetCredentialByExternalIdFn = Callable[[Provider, str], Awaitable[Credential | None]]
