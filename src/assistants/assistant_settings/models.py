@@ -22,3 +22,11 @@ class AssistantSettingCreate:
     rules: str = "Always answer in the language of the conversation"
     has_calendar: bool = False
     has_rag: bool = False
+
+@dataclass(frozen=True)
+class AssistantSettingUpdate:
+    personality: str
+    instructions: str
+    rules: str
+    has_calendar: bool
+    has_rag: bool
