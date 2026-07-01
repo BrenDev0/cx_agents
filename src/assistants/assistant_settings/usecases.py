@@ -35,9 +35,7 @@ async def handle_delete_assistant_setting(
     assistant_id: UUID,
     delete_assistant_setting_by_assistant_id: DeleteAssistantSettingByAssistantIdFn
 ) -> None:
-    assistant_setting = await delete_assistant_setting_by_assistant_id(
-        assistant_id=assistant_id
-    )
+    assistant_setting = await delete_assistant_setting_by_assistant_id(assistant_id)
 
     if not assistant_setting:
         raise NotFoundException("Assistant setting not found")
