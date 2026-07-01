@@ -14,6 +14,7 @@ from src.vector_store.qdrant.vector_store import QdrantVectorStore
 from src.settings import settings
 from .router import router as api_router
 from .exception_hanlder import ExceptionHanlder
+from .rate_limiter import RateLimiter
 
 
 @asynccontextmanager
@@ -71,6 +72,8 @@ app.add_middleware(
 app.add_middleware(DbSessionMiddleware, session_maker=db_session_maker)
 
 app.add_middleware(ExceptionHanlder)
+
+app.add_middleware(RateLimiter, limit=100, window_seconds=60)
 
 @app.get("/")
 def health_check():
