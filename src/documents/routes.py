@@ -14,7 +14,6 @@ from .sqlalchemy.dependencies import (
     provide_delete_document_by_id
 )
 from .usecases import handle_upload, handle_get_document, handle_delete_document
-from .mappers import domain_to_public_schema
 
 router = APIRouter(
     tags=["Documents"]

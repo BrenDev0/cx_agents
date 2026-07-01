@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 from src.object_storage.types import ObjectStore
 from src.exceptions import NotFoundException
 
-from .models import Document, DocumentCreate
+from .models import DocumentCreate
 from .schemas import DocumentResponse
 from .types import CreateDocumentFn, GetDocumentByIdFn, DeleteDocumentByIdFn
 from .mappers import domain_to_public_schema
@@ -14,7 +14,7 @@ async def handle_upload(
     filename: str,
     content_type: str,
     file_bytes: bytes
-) -> Document:
+) -> DocumentResponse:
     object_key = f"{user_id}/{uuid4()}-{filename}"
 
     document_in = DocumentCreate(

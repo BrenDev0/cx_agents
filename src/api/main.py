@@ -1,11 +1,11 @@
 from contextlib import asynccontextmanager
-from sqlalchemy.ext.asyncio import async_sessionmaker
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from httpx import AsyncClient
 
 from src.cache.redis import RedisCacheStore
-from src.db.sqlalchemy.core import engine
+from src.db.sqlalchemy.core import db_session_maker
+from src.db.sqlalchemy.middleware import DbSessionMiddleware
 from src.cryptography.services import DefaultCryptographyService
 from src.cryptography.encryption import encrypt, decrypt
 from src.cryptography.hashing import deterministic_hash, hash_password, verify_password
@@ -20,9 +20,6 @@ from .exception_hanlder import ExceptionHanlder
 async def lifespan(app: FastAPI):
     cache_store = RedisCacheStore(connection_url=settings.REDIS_URL)
     app.state.cache_store = cache_store
-
-    db_session_maker = async_sessionmaker(bind=engine, expire_on_commit=False)
-    app.state.db_session_maker = db_session_maker
 
     cryptography_service = DefaultCryptographyService(
         encrypt=encrypt,
@@ -71,34 +68,9 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+app.add_middleware(DbSessionMiddleware, session_maker=db_session_maker)
+
 app.add_middleware(ExceptionHanlder)
-
-@app.middleware("http")
-async def db_session_middleware(
-    request: Request,
-    call_next
-):
-    if "/api/v1" not in str(request.url):
-        return await call_next(request)
-    
-    try:
-        session = request.app.state.db_session_maker()
-        request.state.db = session
-
-        response = await call_next(request)
-
-        if hasattr(request.state, "db") and request.state.db.is_active:
-            await request.state.db.commit()
-
-        return response
-
-    except Exception:
-        await request.state.db.rollback()
-        await request.state.db.close()
-        raise
-    
-    finally:
-        await request.state.db.close()
 
 @app.get("/")
 def health_check():

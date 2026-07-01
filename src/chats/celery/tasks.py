@@ -9,17 +9,11 @@ from src.cache.redis import RedisCacheStore
 from src.integrations.gohighlevel.conversations import GHLConversationsClient
 from src.cryptography.encryption import decrypt
 from src.credentials.sqlalchemy.repository import get_by_external_id
-from sqlalchemy.ext.asyncio import async_sessionmaker
-from src.db.sqlalchemy.core import engine
+from src.db.sqlalchemy.core import db_session_maker
 from src.llm.langchain.agents import LangchainAgent
 from src.llm.langchain.models import Provider
 from src.embeddings.openai.service import OpenaiEmbeddingService
 from src.vector_store.qdrant.vector_store import QdrantVectorStore
-
-
-def _get_db_for_task():
-   db_session_maker = async_sessionmaker(bind=engine, expire_on_commit=False)
-   return db_session_maker()
 
 
 async def _workflow_invoker(location_id: str,  state: ChatState):
@@ -46,7 +40,7 @@ async def _workflow_invoker(location_id: str,  state: ChatState):
       )
 
       cache_store = RedisCacheStore(connection_url=settings.REDIS_URL)
-      db = _get_db_for_task()
+      db = db_session_maker()
       agent_credential = await get_by_external_id(db=db, external_id=location_id)
 
       if not agent_credential:
