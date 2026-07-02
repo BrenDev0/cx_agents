@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from .models import IntegrationCredentialRow
-from ..models import CredentialCreate, Credential, Provider
+from ..models import CredentialCreate, Credential, IntegrationProvider
 from .mappers import row_to_domain, domain_create_to_row
 
 
@@ -20,7 +20,7 @@ async def create(
 
 async def get_by_provider_external_id(
     db: AsyncSession,
-    provider: Provider,
+    provider: IntegrationProvider,
     external_id: str,
 ) -> Credential | None:
     stmt = select(IntegrationCredentialRow).where(

@@ -2,11 +2,11 @@ from pydantic import BaseModel
 from uuid import UUID
 from typing import Literal
 
-from .models import Provider
+from .models import IntegrationProvider
 
 
 class GhlCredentialPayload(BaseModel):
-    provider: Literal[Provider.GHL] = Provider.GHL
+    provider: Literal[IntegrationProvider.GHL] = IntegrationProvider.GHL
     access_token: str
     location_id: str
 
@@ -20,5 +20,5 @@ class CreateCredentialRequest(BaseModel):
 class CredentialPublic(BaseModel):
     id: UUID
     assistant_id: UUID
-    provider: Provider
+    provider: IntegrationProvider
     external_id: str

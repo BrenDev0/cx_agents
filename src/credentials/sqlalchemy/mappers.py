@@ -1,11 +1,11 @@
-from ..models import Credential, CredentialCreate, Provider
+from ..models import Credential, CredentialCreate, IntegrationProvider
 from .models import IntegrationCredentialRow
 
 def row_to_domain(row: IntegrationCredentialRow) -> Credential:
     return Credential(
         id=row.id,
         assistant_id=row.assistant_id,
-        provider=Provider(row.provider),
+        provider=IntegrationProvider(row.provider),
         external_id=row.external_id,
         payload=row.payload,
         expires_at=row.expires_at,

@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 
 
-class Provider(str, Enum):
+class IntegrationProvider(str, Enum):
     GHL = "ghl"
 
 
@@ -12,7 +12,7 @@ class Provider(str, Enum):
 class Credential:
     id: UUID
     assistant_id: UUID
-    provider: Provider
+    provider: IntegrationProvider
     external_id: str
     payload: str
     expires_at: datetime | None
@@ -23,7 +23,7 @@ class Credential:
 @dataclass(frozen=True)
 class CredentialCreate:
     assistant_id: UUID
-    provider: Provider
+    provider: IntegrationProvider
     external_id: str
     payload: str
     expires_at: datetime | None = None

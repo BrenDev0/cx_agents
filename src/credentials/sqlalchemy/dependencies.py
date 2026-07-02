@@ -4,7 +4,7 @@ from src.db.sqlalchemy.dependencies import get_db_session
 
 from .repository import create, get_by_provider_external_id
 from ..types import CreateCredentialFn, GetCredentialByExternalIdFn
-from ..models import CredentialCreate, Credential, Provider
+from ..models import CredentialCreate, Credential, IntegrationProvider
 
 
 
@@ -17,7 +17,7 @@ def provide_create_credential(db: AsyncSession = Depends(get_db_session)) -> Cre
 
 
 def provide_get_credential_by_external_id(db: AsyncSession = Depends(get_db_session)) -> GetCredentialByExternalIdFn:
-    async def  get_credential_by_external_id(provider: Provider, external_id: str) -> Credential | None:
+    async def  get_credential_by_external_id(provider: IntegrationProvider, external_id: str) -> Credential | None:
         return await get_by_provider_external_id(db=db, provider=provider, external_id=external_id)
 
     return get_credential_by_external_id
@@ -32,7 +32,7 @@ async def get_agent_credential(
     if not location_id:
         raise HTTPException(status_code=400, detail="No location id found in path")
 
-    credential = await get_credential_by_external_id(Provider.GHL, location_id)
+    credential = await get_credential_by_external_id(IntegrationProvider.GHL, location_id)
 
     if not credential:
         raise HTTPException(status_code=404, detail=f"No agent credential found for location id: {location_id}")
