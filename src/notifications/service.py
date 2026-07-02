@@ -15,9 +15,9 @@ def create_verification_email(
         template = f.read()
 
     email_body = template.replace('{{verification_code}}', str(code))
-    
+
     email_message = EmailMessage()
-    email_message["From"] = settings.SMTP_USER
+    email_message["From"] = settings.require_smtp_user()
     email_message["To"] = recipient_email
     email_message["Subject"] = "Verificar Correo Electrónico"
     email_message.set_content(email_body, subtype="html")
@@ -28,9 +28,9 @@ def create_verification_email(
 def send_email(
     email_message: EmailMessage
 ) -> None:
-    with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+    with smtplib.SMTP(settings.require_smtp_host(), settings.SMTP_PORT) as server:
         server.starttls()
-        server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+        server.login(settings.require_smtp_user(), settings.require_smtp_password())
         server.send_message(email_message)
 
             
