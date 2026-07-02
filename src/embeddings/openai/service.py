@@ -44,6 +44,13 @@ class OpenaiEmbeddingService:
             chunk_overlap=self._chunk_overlap
         )
 
+        return await self.embed_chunks(texts, metadata=metadata)
+
+    async def embed_chunks(
+        self,
+        texts: list[str],
+        metadata: dict[str, Any] | None = None
+    ) -> EmbeddingResult:
         if not texts:
             return EmbeddingResult(chunks=[], embeddings=[])
 

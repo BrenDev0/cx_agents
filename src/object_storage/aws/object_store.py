@@ -44,6 +44,13 @@ class AwsObjectStore:
                 ExpiresIn=expires_in
             )
 
+    async def download(self, key: str) -> bytes:
+        async with self._client() as s3:
+            response = await s3.get_object(Bucket=self._bucket_name, Key=key)
+
+            async with response["Body"] as stream:
+                return await stream.read()
+
     async def delete_object(self, key: str) -> bool:
         async with self._client() as s3:
             await s3.delete_object(Bucket=self._bucket_name, Key=key)

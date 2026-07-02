@@ -80,3 +80,43 @@ async def test_embed_document_raises_when_no_data_returned(service, mock_openai_
 
     with pytest.raises(ValueError):
         await service.embed_document("hello world")
+
+
+async def test_embed_chunks_returns_empty_result_for_empty_list(service, mock_openai_client: AsyncMock):
+    result = await service.embed_chunks([])
+
+    assert result == EmbeddingResult(chunks=[], embeddings=[])
+    mock_openai_client.embeddings.create.assert_not_awaited()
+
+
+async def test_embed_chunks_embeds_pre_chunked_text_without_rechunking(service, mock_openai_client: AsyncMock):
+    texts = ["first chunk", "second chunk"]
+    mock_openai_client.embeddings.create.return_value = FakeEmbeddingResponse(
+        data=[FakeEmbeddingItem([0.1]), FakeEmbeddingItem([0.2])]
+    )
+
+    result = await service.embed_chunks(texts, metadata={"document_id": "abc"})
+
+    assert [chunk.content for chunk in result.chunks] == texts
+    assert all(chunk.metadata == {"document_id": "abc"} for chunk in result.chunks)
+    assert result.embeddings == [[0.1], [0.2]]
+    mock_openai_client.embeddings.create.assert_awaited_once_with(
+        input=texts, model="text-embedding-3-large"
+    )
+
+
+async def test_embed_chunks_defaults_metadata_to_empty_dict(service, mock_openai_client: AsyncMock):
+    mock_openai_client.embeddings.create.return_value = FakeEmbeddingResponse(
+        data=[FakeEmbeddingItem([0.1])]
+    )
+
+    result = await service.embed_chunks(["a chunk"])
+
+    assert result.chunks[0].metadata == {}
+
+
+async def test_embed_chunks_raises_when_no_data_returned(service, mock_openai_client: AsyncMock):
+    mock_openai_client.embeddings.create.return_value = FakeEmbeddingResponse(data=[])
+
+    with pytest.raises(ValueError):
+        await service.embed_chunks(["a chunk"])
