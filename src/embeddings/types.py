@@ -16,3 +16,10 @@ class EmbeddingService(Protocol):
         metadata: dict[str, Any] | None = None
     ) -> EmbeddingResult:
         ...
+
+    async def embed_chunks(
+        self,
+        texts: list[str],
+        metadata: dict[str, Any] | None = None
+    ) -> EmbeddingResult:
+        ...

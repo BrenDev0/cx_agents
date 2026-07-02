@@ -16,7 +16,12 @@ def chunk_text(
     start = 0
 
     while start < len(text):
-        chunks.append(text[start:start + chunk_size])
+        end = start + chunk_size
+        chunks.append(text[start:end])
+
+        if end >= len(text):
+            break
+
         start += step
 
     return chunks

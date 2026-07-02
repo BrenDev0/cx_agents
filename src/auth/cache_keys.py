@@ -5,6 +5,7 @@ class AuthCacheKey(StrEnum):
     VERIFICATION_CODE = "auth:registration:verification_code"
     VERIFICATION_ATTEMPTS = "auth:registration:attempts"
     REGISTRATION_BLOCKED = "auth:registration:blocked"
+    VERIFICATION_RESEND_COOLDOWN = "auth:registration:resend_cooldown"
     LOGIN_ATTEMPS = "auth:login:attempts"
     LOGIN_BLOCKED = "auth:login:blocked"
     SESSION = "auth:session"
@@ -18,6 +19,9 @@ def get_verification_attempts_key(email_hash: str) -> str:
 
 def get_registration_blocked_key(email_hash: str) -> str:
     return f"{email_hash}:{AuthCacheKey.REGISTRATION_BLOCKED}"
+
+def get_verification_resend_cooldown_key(email_hash: str) -> str:
+    return f"{email_hash}:{AuthCacheKey.VERIFICATION_RESEND_COOLDOWN}"
 
 def get_login_attemps_key(email: str) -> str:
     return f"{email}:{AuthCacheKey.LOGIN_ATTEMPS}"

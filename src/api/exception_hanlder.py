@@ -31,7 +31,7 @@ class ExceptionHanlder(BaseHTTPMiddleware):
             )
 
         except Exception as e:
-            logger.error(e)
+            logger.exception(e)
             response = JSONResponse(
                 status_code=500,
                 content={"detial": [{"msg": "Unable to process request at this time"}]}

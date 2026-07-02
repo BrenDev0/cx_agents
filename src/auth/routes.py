@@ -7,8 +7,8 @@ from src.cache.dependencies import get_cache_store
 from src.cache.types import CacheStore
 from src.users.schemas import UserResponse
 from src.users.types import CreateUserFn, GetUserByEmailHashFn
-from .schemas import RegistrationRequest, LoginRequest
-from .usecases import handle_registration, create_session, handle_login
+from .schemas import RegistrationRequest, LoginRequest, VerifyEmailRequest
+from .usecases import handle_registration, create_session, handle_login, handle_registration_email_verification
 
 
 router = APIRouter(
@@ -22,14 +22,13 @@ async def _create_session_and_set_cookie(
     cache_store: CacheStore
 ):
     ip = getattr(request.state, "ip", "unknown")
-    cleint_agent = getattr(request.headers, "client-agent")
-
+    client_agent = request.headers.get("user-agent", "unknown")
 
     session_id = await create_session(
         cache_store=cache_store,
         user_id=user_id,
         ip=ip,
-        client_agent=cleint_agent
+        client_agent=client_agent
     )
 
     response.set_cookie(
@@ -43,9 +42,23 @@ async def _create_session_and_set_cookie(
     )
 
 
-# @router.post("/verification/email/onboarding", status_code=202)
-# async def verify_email_for_onboarding():
-#     pass
+@router.post("/email-verification/registration", status_code=200)
+async def verify_email_for_registration(
+    data: VerifyEmailRequest,
+    get_user_by_email_hash: GetUserByEmailHashFn = Depends(provide_get_user_by_email_hash),
+    cache_store: CacheStore = Depends(get_cache_store),
+    cryptography: CryptographyService = Depends(get_cryptography_service)
+):
+    
+    await handle_registration_email_verification(
+        email=data.email,
+        cache_store=cache_store,
+        cryptography=cryptography,
+        get_user_by_email_hash=get_user_by_email_hash
+    )
+
+
+    return {"detail": [{"msg": "Verification email sent"}]}
 
 
 @router.post("", status_code=201, response_model=UserResponse)

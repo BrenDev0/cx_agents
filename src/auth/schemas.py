@@ -1,12 +1,15 @@
-from pydantic import BaseModel
+from src.schemas import ApiSchema
+
+class VerifyEmailRequest(ApiSchema):
+    email: str
 
 
-class RegistrationRequest(BaseModel):
+class RegistrationRequest(ApiSchema):
     email: str
     password: str
     verification_code: str | int
 
 
-class LoginRequest(BaseModel):
+class LoginRequest(ApiSchema):
     email: str
     password: str

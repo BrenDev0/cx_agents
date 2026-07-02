@@ -37,3 +37,7 @@ class BadRequestException(AppError):
 class RequestBlockedException(AppError):
     def __init__(self, detail: str = "Too many requests"):
         super().__init__(detail=detail, category=ExceptionCategory.BLOCKED)
+
+class ConflictException(AppError):
+    def __init__(self, detail: str = "Conflict"):
+        super().__init__(detail=detail, category=ExceptionCategory.CONFLICT)

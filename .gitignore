@@ -14,3 +14,6 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Accidentally created when a Windows env var isn't expanded (e.g. %SystemDrive%)
+%*%/

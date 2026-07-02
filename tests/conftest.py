@@ -17,6 +17,9 @@ os.environ.setdefault("AWS_REGION_NAME", "us-east-1")
 os.environ.setdefault("AWS_BUCKET_NAME", "test-bucket")
 os.environ.setdefault("QDRANT_URL", "http://localhost:6333")
 os.environ.setdefault("QDRANT_COLLECTION_NAME", "test-collection")
+os.environ.setdefault("SMTP_HOST", "smtp.example.com")
+os.environ.setdefault("SMTP_USER", "test@example.com")
+os.environ.setdefault("SMTP_PASSWORD", "test")
 
 import json
 from typing import Any

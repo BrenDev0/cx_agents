@@ -9,7 +9,7 @@ from src.utils import utc_now
 class AssistantSettingsRow(Base, IdMixin, TimeStampMixin):
     __tablename__ = "assistant_settings"
 
-    assistant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("assistants", ondelete="CASCADE"), nullable=False)
+    assistant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("assistants.id", ondelete="CASCADE"), nullable=False)
     personality: Mapped[str] = mapped_column(String, nullable=False)
     instructions: Mapped[str] = mapped_column(String, nullable=False)
     rules: Mapped[str] = mapped_column(String, nullable=False)

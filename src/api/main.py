@@ -41,7 +41,8 @@ async def lifespan(app: FastAPI):
         bucket_name=settings.AWS_BUCKET_NAME,
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        region_name=settings.AWS_REGION_NAME
+        region_name=settings.AWS_REGION_NAME,
+        endpoint=settings.BUCKET_ENDPOINT
     )
 
     vector_store = QdrantVectorStore(
