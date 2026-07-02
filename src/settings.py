@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     QDRANT_API_KEY: str | None = None
     QDRANT_COLLECTION_NAME: str
 
+    SMTP_HOST: str 
+    SMTP_PORT: int = 587
+    SMTP_USER: str
+    SMTP_PASSWORD: str
+
     REGISTRATION_MAX_ATTEMPS: int = 5
     LOGIN_MAX_ATTEMPS: int = 5
 
