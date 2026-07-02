@@ -13,7 +13,6 @@ from src.credentials.sqlalchemy.repository import get_by_provider_external_id
 from src.credentials.models import Provider
 from src.db.sqlalchemy.core import db_session_maker
 from src.llm.langchain.agents import LangchainAgent
-from src.llm.langchain.models import Provider
 from src.embeddings.openai.service import OpenaiEmbeddingService
 from src.vector_store.qdrant.vector_store import QdrantVectorStore
 
