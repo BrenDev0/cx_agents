@@ -1,4 +1,5 @@
 import asyncio
+import logging 
 from uuid import UUID, uuid4
 from src.cache.types import CacheStore
 from src.users.schemas import UserResponse
@@ -13,6 +14,7 @@ from .service import verify_code_or_raise, generate_random_code, ensure_not_bloc
 from .cache_keys import get_session_key, get_verification_code_key, get_verification_resend_cooldown_key
 from ..utils import utc_now_iso
 
+logger = logging.getLogger(__name__)
 
 async def handle_registration_email_verification(
     email: str,
@@ -45,6 +47,7 @@ async def handle_registration_email_verification(
     try:
         await asyncio.to_thread(send_email, email_message)
     except Exception as e:
+        logger.error(e)
         await cache_store.remove(verification_code_key)
         raise RuntimeError("Error sending verification email") from e
 

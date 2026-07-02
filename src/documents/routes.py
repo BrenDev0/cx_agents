@@ -67,3 +67,5 @@ async def documents_delete(
         object_store=object_store,
         delete_document_by_id=delete_document_by_id
     )
+
+    return {"detail": [{"msg": "Document deleted"}]}

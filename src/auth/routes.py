@@ -22,14 +22,13 @@ async def _create_session_and_set_cookie(
     cache_store: CacheStore
 ):
     ip = getattr(request.state, "ip", "unknown")
-    cleint_agent = getattr(request.headers, "client-agent")
-
+    client_agent = request.headers.get("user-agent", "unknown")
 
     session_id = await create_session(
         cache_store=cache_store,
         user_id=user_id,
         ip=ip,
-        client_agent=cleint_agent
+        client_agent=client_agent
     )
 
     response.set_cookie(

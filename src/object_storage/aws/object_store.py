@@ -8,18 +8,21 @@ class AwsObjectStore:
         bucket_name: str,
         aws_access_key_id: str,
         aws_secret_access_key: str,
-        region_name: str
+        region_name: str,
+        endpoint: str
     ):
         self._bucket_name = bucket_name
         self._access_key_id = aws_access_key_id
         self._secret_access_key = aws_secret_access_key
         self._region_name = region_name
+        self._endpoint = endpoint
 
     def _client(self):
         session = aioboto3.Session()
 
         return session.client(
             service_name="s3",
+            endpoint_url=self._endpoint,
             region_name=self._region_name,
             aws_access_key_id=self._access_key_id,
             aws_secret_access_key=self._secret_access_key
