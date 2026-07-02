@@ -38,4 +38,34 @@ class Settings(BaseSettings):
     REGISTRATION_MAX_ATTEMPS: int = 5
     LOGIN_MAX_ATTEMPS: int = 5
 
+    def _require(self, value: str | None, name: str) -> str:
+        if not value:
+            raise ValueError(f"{name} is not configured")
+
+        return value
+
+    def require_aws_bucket_name(self) -> str:
+        return self._require(self.AWS_BUCKET_NAME, "AWS_BUCKET_NAME")
+
+    def require_aws_access_key_id(self) -> str:
+        return self._require(self.AWS_ACCESS_KEY_ID, "AWS_ACCESS_KEY_ID")
+
+    def require_aws_secret_access_key(self) -> str:
+        return self._require(self.AWS_SECRET_ACCESS_KEY, "AWS_SECRET_ACCESS_KEY")
+
+    def require_aws_region_name(self) -> str:
+        return self._require(self.AWS_REGION_NAME, "AWS_REGION_NAME")
+
+    def require_bucket_endpoint(self) -> str:
+        return self._require(self.BUCKET_ENDPOINT, "BUCKET_ENDPOINT")
+
+    def require_smtp_host(self) -> str:
+        return self._require(self.SMTP_HOST, "SMTP_HOST")
+
+    def require_smtp_user(self) -> str:
+        return self._require(self.SMTP_USER, "SMTP_USER")
+
+    def require_smtp_password(self) -> str:
+        return self._require(self.SMTP_PASSWORD, "SMTP_PASSWORD")
+
 settings = Settings() # type: ignore[call-arg]

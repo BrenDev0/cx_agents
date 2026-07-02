@@ -33,11 +33,11 @@ async def _process_knowledge(
             raise ValueError(f"Document {document_id} not found for user {user_id}")
 
         object_store = AwsObjectStore(
-            bucket_name=settings.AWS_BUCKET_NAME,
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            region_name=settings.AWS_REGION_NAME,
-            endpoint=settings.BUCKET_ENDPOINT
+            bucket_name=settings.require_aws_bucket_name(),
+            aws_access_key_id=settings.require_aws_access_key_id(),
+            aws_secret_access_key=settings.require_aws_secret_access_key(),
+            region_name=settings.require_aws_region_name(),
+            endpoint=settings.require_bucket_endpoint()
         )
         embedding_service = OpenaiEmbeddingService(api_key=settings.OPENAI_API_KEY)
         vector_store = QdrantVectorStore(
