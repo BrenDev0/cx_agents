@@ -5,6 +5,11 @@ from src.schemas import ApiSchema
 from .models import KnowledgeStatus
 
 
+class KnowledgeCreateRequest(ApiSchema):
+    document_id: UUID
+    assistant_id: UUID
+
+
 class KnowledgeResponse(ApiSchema):
     id: UUID
     assistant_id: UUID

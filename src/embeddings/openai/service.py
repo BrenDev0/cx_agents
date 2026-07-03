@@ -6,6 +6,13 @@ from openai import AsyncOpenAI
 from src.vector_store.models import DocumentChunk, EmbeddingResult
 from ..chunking import chunk_text
 
+EMBEDDING_DIMENSIONS = {
+    "text-embedding-3-large": 3072,
+    "text-embedding-3-small": 1536,
+    "text-embedding-ada-002": 1536
+}
+
+
 class OpenaiEmbeddingService:
     def __init__(
         self,
@@ -18,6 +25,10 @@ class OpenaiEmbeddingService:
         self._client = AsyncOpenAI(api_key=api_key)
         self._chunk_size = chunk_size
         self._chunk_overlap = chunk_overlap
+
+    @property
+    def dimensions(self) -> int:
+        return EMBEDDING_DIMENSIONS[self._model]
 
     async def embed_query(
         self,

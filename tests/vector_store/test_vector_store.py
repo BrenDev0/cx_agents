@@ -24,6 +24,39 @@ def make_chunk(**overrides) -> DocumentChunk:
     return DocumentChunk(**defaults)
 
 
+async def test_ensure_collection_skips_create_when_collection_already_exists(
+    store: QdrantVectorStore, mock_qdrant_client: AsyncMock
+):
+    mock_qdrant_client.collection_exists.return_value = True
+
+    await store.ensure_collection(vector_size=3072)
+
+    mock_qdrant_client.collection_exists.assert_awaited_once_with("test-collection")
+    mock_qdrant_client.create_collection.assert_not_awaited()
+
+
+async def test_ensure_collection_creates_it_when_missing(store: QdrantVectorStore, mock_qdrant_client: AsyncMock):
+    mock_qdrant_client.collection_exists.return_value = False
+
+    await store.ensure_collection(vector_size=3072)
+
+    mock_qdrant_client.create_collection.assert_awaited_once_with(
+        collection_name="test-collection",
+        vectors_config=models.VectorParams(size=3072, distance=models.Distance.COSINE)
+    )
+
+
+async def test_ensure_collection_uses_given_distance(store: QdrantVectorStore, mock_qdrant_client: AsyncMock):
+    mock_qdrant_client.collection_exists.return_value = False
+
+    await store.ensure_collection(vector_size=1536, distance=models.Distance.DOT)
+
+    mock_qdrant_client.create_collection.assert_awaited_once_with(
+        collection_name="test-collection",
+        vectors_config=models.VectorParams(size=1536, distance=models.Distance.DOT)
+    )
+
+
 async def test_upsert_sends_points_built_from_chunks_and_embeddings(store: QdrantVectorStore, mock_qdrant_client: AsyncMock):
     chunk_1 = make_chunk(content="first", metadata={"a": 1})
     chunk_2 = make_chunk(content="second", metadata={"b": 2})

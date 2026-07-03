@@ -3,7 +3,7 @@ from uuid import UUID
 
 from src.workers.celery.app import worker
 from src.settings import settings
-from src.db.sqlalchemy.core import db_session_maker
+from src.db.sqlalchemy.core import worker_session_maker
 from src.documents.sqlalchemy.repository import get_by_id as get_document_by_id
 from src.object_storage.aws.object_store import AwsObjectStore
 from src.embeddings.openai.service import OpenaiEmbeddingService
@@ -23,7 +23,7 @@ async def _process_knowledge(
     assistant_id: str,
     user_id: str
 ) -> None:
-    db = db_session_maker()
+    db = worker_session_maker()
     vector_store = None
 
     try:
@@ -33,18 +33,19 @@ async def _process_knowledge(
             raise ValueError(f"Document {document_id} not found for user {user_id}")
 
         object_store = AwsObjectStore(
-            bucket_name=settings.require_aws_bucket_name(),
-            aws_access_key_id=settings.require_aws_access_key_id(),
-            aws_secret_access_key=settings.require_aws_secret_access_key(),
-            region_name=settings.require_aws_region_name(),
-            endpoint=settings.require_bucket_endpoint()
+            bucket_name=settings.AWS_BUCKET_NAME,
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.AWS_REGION_NAME,
+            endpoint=settings.BUCKET_ENDPOINT
         )
         embedding_service = OpenaiEmbeddingService(api_key=settings.OPENAI_API_KEY)
         vector_store = QdrantVectorStore(
-            url=settings.QDRANT_URL,
+            url=settings.require_qdrant_url(),
             api_key=settings.QDRANT_API_KEY,
-            collection_name=settings.QDRANT_COLLECTION_NAME
+            collection_name=settings.require_qdrant_collection_name()
         )
+        await vector_store.ensure_collection(vector_size=embedding_service.dimensions)
 
         metadata = {
             "user_id": user_id,
@@ -72,7 +73,12 @@ async def _process_knowledge(
         await db.commit()
 
     except Exception:
-        await db.rollback()
+        try:
+            await db.close()
+        except Exception:
+            pass
+
+        db = worker_session_maker()
         await update_status(db=db, knowledge_id=UUID(knowledge_id), status=KnowledgeStatus.FAILED)
         await db.commit()
         raise

@@ -16,6 +16,19 @@ class QdrantVectorStore:
         self._collection_name = collection_name
         self._client = AsyncQdrantClient(url=url, api_key=api_key)
 
+    async def ensure_collection(
+        self,
+        vector_size: int,
+        distance: models.Distance = models.Distance.COSINE
+    ) -> None:
+        if await self._client.collection_exists(self._collection_name):
+            return
+
+        await self._client.create_collection(
+            collection_name=self._collection_name,
+            vectors_config=models.VectorParams(size=vector_size, distance=distance)
+        )
+
     async def upsert(self, result: EmbeddingResult) -> None:
         points = [
             models.PointStruct(
