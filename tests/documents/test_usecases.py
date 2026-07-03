@@ -149,7 +149,7 @@ async def test_handle_get_document_raises_when_not_found(fake_object_store):
         )
 
 
-async def test_handle_delete_document_deletes_from_storage(fake_object_store):
+async def test_handle_delete_document_deletes_from_storage(fake_object_store, fake_vector_store):
     document = make_document()
 
     async def fake_delete_document_by_id(document_id, user_id):
@@ -161,13 +161,15 @@ async def test_handle_delete_document_deletes_from_storage(fake_object_store):
         document_id=document.id,
         user_id=document.user_id,
         object_store=fake_object_store,
+        vector_store=fake_vector_store,
         delete_document_by_id=fake_delete_document_by_id
     )
 
     assert fake_object_store.deleted == [document.key]
+    assert fake_vector_store.deleted_filters == [{"document_id": str(document.id)}]
 
 
-async def test_handle_delete_document_raises_when_not_found(fake_object_store):
+async def test_handle_delete_document_raises_when_not_found(fake_object_store, fake_vector_store):
     async def fake_delete_document_by_id(document_id, user_id):
         return None
 
@@ -176,13 +178,15 @@ async def test_handle_delete_document_raises_when_not_found(fake_object_store):
             document_id=uuid4(),
             user_id=uuid4(),
             object_store=fake_object_store,
+            vector_store=fake_vector_store,
             delete_document_by_id=fake_delete_document_by_id
         )
 
     assert fake_object_store.deleted == []
+    assert fake_vector_store.deleted_filters == []
 
 
-async def test_handle_delete_document_raises_runtime_error_when_storage_delete_fails():
+async def test_handle_delete_document_raises_runtime_error_when_storage_delete_fails(fake_vector_store):
     document = make_document()
 
     async def fake_delete_document_by_id(document_id, user_id):
@@ -203,5 +207,28 @@ async def test_handle_delete_document_raises_runtime_error_when_storage_delete_f
             document_id=document.id,
             user_id=document.user_id,
             object_store=FailingObjectStore(),
+            vector_store=fake_vector_store,
             delete_document_by_id=fake_delete_document_by_id
         )
+
+
+async def test_handle_delete_document_raises_runtime_error_when_vector_delete_fails(fake_object_store):
+    document = make_document()
+
+    async def fake_delete_document_by_id(document_id, user_id):
+        return document
+
+    class FailingVectorStore:
+        async def delete_by_filter(self, filter):
+            raise ConnectionError("qdrant unavailable")
+
+    with pytest.raises(RuntimeError):
+        await handle_delete_document(
+            document_id=document.id,
+            user_id=document.user_id,
+            object_store=fake_object_store,
+            vector_store=FailingVectorStore(),
+            delete_document_by_id=fake_delete_document_by_id
+        )
+
+    assert fake_object_store.deleted == []

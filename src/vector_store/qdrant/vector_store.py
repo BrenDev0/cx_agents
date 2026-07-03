@@ -29,6 +29,16 @@ class QdrantVectorStore:
             vectors_config=models.VectorParams(size=vector_size, distance=distance)
         )
 
+        # Deletes are filtered on these fields (e.g. by document_id on document
+        # removal); index them so delete_by_filter doesn't degrade into a full
+        # collection scan as the knowledge base grows.
+        for field in ("metadata.document_id", "metadata.assistant_id", "metadata.user_id"):
+            await self._client.create_payload_index(
+                collection_name=self._collection_name,
+                field_name=field,
+                field_schema=models.PayloadSchemaType.KEYWORD
+            )
+
     async def upsert(self, result: EmbeddingResult) -> None:
         points = [
             models.PointStruct(

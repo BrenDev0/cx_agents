@@ -5,6 +5,8 @@ from src.auth.dependencies import get_current_user
 from src.users.models import User
 from src.object_storage.types import ObjectStore
 from src.object_storage.dependencies import get_object_store
+from src.vector_store.types import VectorStore
+from src.vector_store.dependencies import get_vector_store
 
 from .schemas import DocumentResponse
 from .types import CreateDocumentFn, GetDocumentByIdFn, DeleteDocumentByIdFn
@@ -59,12 +61,14 @@ async def documents_delete(
     document_id: UUID,
     current_user: User = Depends(get_current_user),
     object_store: ObjectStore = Depends(get_object_store),
+    vector_store: VectorStore = Depends(get_vector_store),
     delete_document_by_id: DeleteDocumentByIdFn = Depends(provide_delete_document_by_id)
 ):
     await handle_delete_document(
         document_id=document_id,
         user_id=current_user.id,
         object_store=object_store,
+        vector_store=vector_store,
         delete_document_by_id=delete_document_by_id
     )
 
