@@ -31,6 +31,8 @@ def make_assistant(**overrides) -> Assistant:
         user_id=uuid4(),
         name="Support bot",
         description="Handles support tickets",
+        webhook_id=uuid4(),
+        webhook_secret_hash="test-secret-hash",
         created_at=datetime.now(timezone.utc)
     )
     defaults.update(overrides)

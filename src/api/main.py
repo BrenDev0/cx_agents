@@ -8,7 +8,7 @@ from src.db.sqlalchemy.core import db_session_maker
 from src.db.sqlalchemy.middleware import DbSessionMiddleware
 from src.cryptography.services import DefaultCryptographyService
 from src.cryptography.encryption import encrypt, decrypt
-from src.cryptography.hashing import deterministic_hash, hash_password, verify_password
+from src.cryptography.hashing import deterministic_hash, hash_token, hash_password, verify_password
 from src.object_storage.aws.object_store import AwsObjectStore
 from src.embeddings.openai.service import OpenaiEmbeddingService
 from src.vector_store.qdrant.vector_store import QdrantVectorStore
@@ -28,7 +28,8 @@ async def lifespan(app: FastAPI):
         decrypt=decrypt,
         hash_password=hash_password,
         verify_password=verify_password,
-        deterministic_hash=deterministic_hash
+        deterministic_hash=deterministic_hash,
+        hash_token=hash_token
     )
     app.state.cryptography = cryptography_service
 

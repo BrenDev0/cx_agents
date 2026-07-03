@@ -1,4 +1,4 @@
-from src.cryptography.hashing import deterministic_hash, hash_password, verify_password
+from src.cryptography.hashing import deterministic_hash, hash_token, hash_password, verify_password
 
 
 def test_deterministic_hash_is_stable():
@@ -19,6 +19,18 @@ def test_deterministic_hash_matches_sha256():
     expected = hashlib.sha256("user@example.com".encode("utf-8")).hexdigest()
 
     assert deterministic_hash("user@example.com") == expected
+
+
+def test_hash_token_is_stable():
+    assert hash_token("aB3-secret") == hash_token("aB3-secret")
+
+
+def test_hash_token_is_case_sensitive():
+    assert hash_token("AB3-secret") != hash_token("ab3-secret")
+
+
+def test_hash_token_differs_for_different_input():
+    assert hash_token("token-a") != hash_token("token-b")
 
 
 def test_hash_password_returns_different_value_than_input():

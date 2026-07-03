@@ -101,6 +101,9 @@ class FakeCryptographyService:
     def deterministic_hash(self, value: str) -> str:
         return f"hash:{value}"
 
+    def hash_token(self, value: str) -> str:
+        return f"token-hash:{value}"
+
     def hash_password(self, str_to_hash: str) -> str:
         return f"hashed:{str_to_hash}"
 

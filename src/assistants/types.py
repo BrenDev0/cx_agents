@@ -12,3 +12,7 @@ class GetAssistantByIdFn(Protocol):
 class DeleteAssistantById(Protocol):
     async def __call__(self, assistant_id: UUID, user_id: UUID) -> Assistant | None: ...
 
+
+class UpdateAssistantWebhookSecretHashFn(Protocol):
+    async def __call__(self, assistant_id: UUID, user_id: UUID, webhook_secret_hash: str) -> Assistant | None: ...
+

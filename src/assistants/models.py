@@ -8,6 +8,8 @@ class Assistant:
     user_id: UUID
     name: str
     description: str
+    webhook_id: UUID
+    webhook_secret_hash: str
     created_at: datetime
 
 
@@ -16,3 +18,4 @@ class AssistantCreate:
     user_id: UUID
     name: str
     description: str
+    webhook_secret_hash: str
