@@ -20,6 +20,10 @@ def make_service(**overrides) -> DefaultCryptographyService:
         calls["deterministic_hash"] = (str_to_hash,)
         return "hashed-deterministic"
 
+    def hash_token(value):
+        calls["hash_token"] = (value,)
+        return "hashed-token"
+
     def hash_password(str_to_hash):
         calls["hash_password"] = (str_to_hash,)
         return "hashed-password"
@@ -29,6 +33,7 @@ def make_service(**overrides) -> DefaultCryptographyService:
         decrypt=overrides.get("decrypt", decrypt),
         verify_password=overrides.get("verify_password", verify_password),
         deterministic_hash=overrides.get("deterministic_hash", deterministic_hash),
+        hash_token=overrides.get("hash_token", hash_token),
         hash_password=overrides.get("hash_password", hash_password),
     )
     return service, calls
@@ -68,6 +73,15 @@ def test_deterministic_hash_delegates_to_injected_fn():
 
     assert result == "hashed-deterministic"
     assert calls["deterministic_hash"] == ("value",)
+
+
+def test_hash_token_delegates_to_injected_fn():
+    service, calls = make_service()
+
+    result = service.hash_token("webhook-secret")
+
+    assert result == "hashed-token"
+    assert calls["hash_token"] == ("webhook-secret",)
 
 
 def test_hash_password_delegates_to_injected_fn():

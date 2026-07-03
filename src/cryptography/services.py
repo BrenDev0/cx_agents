@@ -1,4 +1,4 @@
-from .types import EncryptFn, DecryptFn, VerifyPasswordFn, DeterministicHashFn, HashPasswordFn
+from .types import EncryptFn, DecryptFn, VerifyPasswordFn, DeterministicHashFn, HashTokenFn, HashPasswordFn
 
 class DefaultCryptographyService:
     def __init__(
@@ -7,12 +7,14 @@ class DefaultCryptographyService:
         decrypt: DecryptFn,
         verify_password: VerifyPasswordFn,
         deterministic_hash: DeterministicHashFn,
+        hash_token: HashTokenFn,
         hash_password: HashPasswordFn
     ):
         self._encrypt = encrypt
         self._decrypt = decrypt
         self._verify_password = verify_password
         self._determistic_hash = deterministic_hash
+        self._hash_token = hash_token
         self._hash_password = hash_password
 
 
@@ -27,6 +29,9 @@ class DefaultCryptographyService:
     
     def deterministic_hash(self, str_to_hash: str) -> str:
         return self._determistic_hash(str_to_hash)
+
+    def hash_token(self, value: str) -> str:
+        return self._hash_token(value)
     
     def hash_password(self, str_to_hash) -> str:
         return self._hash_password(str_to_hash)

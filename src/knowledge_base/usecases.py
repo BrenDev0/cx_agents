@@ -6,7 +6,12 @@ from src.exceptions import NotFoundException, ConflictException, BadRequestExcep
 
 from .models import KnowledgeCreate, KnowledgeStatus
 from .schemas import KnowledgeResponse
-from .types import GetKnowledgeByAssistantAndDocumentFn, CreateKnowledgeFn
+from .types import (
+    GetKnowledgeByAssistantAndDocumentFn,
+    CreateKnowledgeFn,
+    GetKnowledgeByIdFn,
+    UpdateKnowledgeStatusFn
+)
 from .mappers import domain_to_public_schema
 from .celery.tasks import add_document_to_knowledge_base
 
@@ -52,3 +57,41 @@ async def handle_create_knowledge(
     )
 
     return domain_to_public_schema(knowledge)
+
+
+async def handle_retry_knowledge(
+    knowledge_id: UUID,
+    user_id: UUID,
+    get_knowledge_by_id: GetKnowledgeByIdFn,
+    get_assistant_by_id: GetAssistantByIdFn,
+    update_knowledge_status: UpdateKnowledgeStatusFn
+) -> KnowledgeResponse:
+    knowledge = await get_knowledge_by_id(knowledge_id=knowledge_id)
+    if not knowledge:
+        raise NotFoundException("Knowledge not found")
+
+    assistant = await get_assistant_by_id(assistant_id=knowledge.assistant_id, user_id=user_id)
+    if not assistant:
+        raise NotFoundException("Assistant not found")
+
+    if knowledge.status == KnowledgeStatus.READY:
+        raise ConflictException("Knowledge has already been processed")
+
+    if knowledge.status != KnowledgeStatus.FAILED:
+        raise ConflictException("Only failed knowledge can be retried")
+
+    updated_knowledge = await update_knowledge_status(
+        knowledge_id=knowledge_id,
+        status=KnowledgeStatus.PENDING
+    )
+    if not updated_knowledge:
+        raise NotFoundException("Knowledge not found")
+
+    add_document_to_knowledge_base.delay(
+        str(updated_knowledge.id),
+        str(updated_knowledge.document_id),
+        str(updated_knowledge.assistant_id),
+        str(user_id)
+    )
+
+    return domain_to_public_schema(updated_knowledge)

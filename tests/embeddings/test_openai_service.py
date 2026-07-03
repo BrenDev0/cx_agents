@@ -18,6 +18,16 @@ class FakeEmbeddingResponse:
         self.data = data
 
 
+def test_dimensions_returns_size_for_default_model(service):
+    assert service.dimensions == 3072
+
+
+def test_dimensions_returns_size_for_configured_model(mock_openai_client: AsyncMock):
+    service = OpenaiEmbeddingService(api_key="test-key", model="text-embedding-3-small")
+
+    assert service.dimensions == 1536
+
+
 async def test_embed_query_returns_embedding_vector(service, mock_openai_client: AsyncMock):
     mock_openai_client.embeddings.create.return_value = FakeEmbeddingResponse(
         data=[FakeEmbeddingItem([0.1, 0.2, 0.3])]

@@ -10,6 +10,8 @@ def row_to_domain(row: AssistantRow) -> Assistant:
         user_id=row.user_id,
         name=row.name,
         description=row.description,
+        webhook_id=row.webhook_id,
+        webhook_secret_hash=row.webhook_secret_hash,
         created_at=row.created_at
     )
 

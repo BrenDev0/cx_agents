@@ -17,8 +17,8 @@ async def create(db: AsyncSession, knowledge_in: KnowledgeCreate) -> Knowledge:
     return row_to_domain(row)
 
 
-async def get_by_id(db: AsyncSession, knowledge_id: UUID, assistant_id: UUID) -> Knowledge | None:
-    stmt = select(KnowledgeRow).where(KnowledgeRow.id == knowledge_id).where(KnowledgeRow.assistant_id == assistant_id)
+async def get_by_id(db: AsyncSession, knowledge_id: UUID) -> Knowledge | None:
+    stmt = select(KnowledgeRow).where(KnowledgeRow.id == knowledge_id)
 
     result = await db.execute(stmt)
 

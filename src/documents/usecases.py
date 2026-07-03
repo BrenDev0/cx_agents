@@ -1,5 +1,6 @@
 from uuid import UUID, uuid4
 from src.object_storage.types import ObjectStore
+from src.vector_store.types import VectorStore
 from src.exceptions import NotFoundException
 
 from .models import DocumentCreate
@@ -62,12 +63,18 @@ async def handle_delete_document(
     document_id: UUID,
     user_id: UUID,
     object_store: ObjectStore,
+    vector_store: VectorStore,
     delete_document_by_id: DeleteDocumentByIdFn
 ) -> None:
     document = await delete_document_by_id(document_id=document_id, user_id=user_id)
 
     if not document:
         raise NotFoundException("Document not found")
+
+    try:
+        await vector_store.delete_by_filter({"document_id": str(document_id)})
+    except Exception as e:
+        raise RuntimeError(f"Failed to delete vectors for document '{document.name}'") from e
 
     try:
         await object_store.delete_object(key=document.key)

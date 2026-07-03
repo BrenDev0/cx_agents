@@ -20,15 +20,15 @@ class Settings(BaseSettings):
 
     ENCRYPTION_KEY: str
 
-    AWS_ACCESS_KEY_ID: str | None = None
-    AWS_SECRET_ACCESS_KEY: str | None = None
-    AWS_REGION_NAME: str | None = None
-    AWS_BUCKET_NAME: str | None = None
-    BUCKET_ENDPOINT: str | None = None
+    AWS_ACCESS_KEY_ID: str 
+    AWS_SECRET_ACCESS_KEY: str
+    AWS_REGION_NAME: str 
+    AWS_BUCKET_NAME: str 
+    BUCKET_ENDPOINT: str 
 
-    QDRANT_URL: str
+    QDRANT_URL: str | None = None
     QDRANT_API_KEY: str | None = None
-    QDRANT_COLLECTION_NAME: str
+    QDRANT_COLLECTION_NAME: str | None = None
 
     SMTP_HOST: str | None = None
     SMTP_PORT: int = 587
@@ -44,20 +44,11 @@ class Settings(BaseSettings):
 
         return value
 
-    def require_aws_bucket_name(self) -> str:
-        return self._require(self.AWS_BUCKET_NAME, "AWS_BUCKET_NAME")
+    def require_qdrant_url(self) -> str:
+        return self._require(self.QDRANT_URL, "QDRANT_URL")
 
-    def require_aws_access_key_id(self) -> str:
-        return self._require(self.AWS_ACCESS_KEY_ID, "AWS_ACCESS_KEY_ID")
-
-    def require_aws_secret_access_key(self) -> str:
-        return self._require(self.AWS_SECRET_ACCESS_KEY, "AWS_SECRET_ACCESS_KEY")
-
-    def require_aws_region_name(self) -> str:
-        return self._require(self.AWS_REGION_NAME, "AWS_REGION_NAME")
-
-    def require_bucket_endpoint(self) -> str:
-        return self._require(self.BUCKET_ENDPOINT, "BUCKET_ENDPOINT")
+    def require_qdrant_collection_name(self) -> str:
+        return self._require(self.QDRANT_COLLECTION_NAME, "QDRANT_COLLECTION_NAME")
 
     def require_smtp_host(self) -> str:
         return self._require(self.SMTP_HOST, "SMTP_HOST")

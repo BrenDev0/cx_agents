@@ -22,8 +22,8 @@ def provide_create_knowledge(db: AsyncSession = Depends(get_db_session)) -> Crea
 
 
 def provide_get_knowledge_by_id(db: AsyncSession = Depends(get_db_session)) -> GetKnowledgeByIdFn:
-    async def get_knowledge_by_id(knowledge_id: UUID, assistant_id: UUID) -> Knowledge | None:
-        return await get_by_id(db=db, knowledge_id=knowledge_id, assistant_id=assistant_id)
+    async def get_knowledge_by_id(knowledge_id: UUID) -> Knowledge | None:
+        return await get_by_id(db=db, knowledge_id=knowledge_id)
 
     return get_knowledge_by_id
 

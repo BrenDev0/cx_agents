@@ -24,3 +24,20 @@ class FakeObjectStore:
 @pytest.fixture
 def fake_object_store() -> FakeObjectStore:
     return FakeObjectStore()
+
+
+class FakeVectorStore:
+    """In-memory stand-in for the VectorStore protocol so usecases tests don't
+    touch real Qdrant."""
+
+    def __init__(self) -> None:
+        self.deleted_filters: list[dict] = []
+
+    async def delete_by_filter(self, filter: dict) -> bool:
+        self.deleted_filters.append(filter)
+        return True
+
+
+@pytest.fixture
+def fake_vector_store() -> FakeVectorStore:
+    return FakeVectorStore()

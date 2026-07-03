@@ -11,7 +11,7 @@ from src.integrations.gohighlevel.conversations import GHLConversationsClient
 from src.cryptography.encryption import decrypt
 from src.credentials.sqlalchemy.repository import get_by_provider_external_id
 from src.credentials.models import IntegrationProvider
-from src.db.sqlalchemy.core import db_session_maker
+from src.db.sqlalchemy.core import worker_session_maker
 from src.llm.langchain.agents import LangchainAgent
 from src.llm.langchain.models import Provider
 from src.embeddings.openai.service import OpenaiEmbeddingService
@@ -36,13 +36,14 @@ async def _workflow_invoker(location_id: str,  state: ChatState):
       )
 
       vector_store = QdrantVectorStore(
-         url=settings.QDRANT_URL,
+         url=settings.require_qdrant_url(),
          api_key=settings.QDRANT_API_KEY,
-         collection_name=settings.QDRANT_COLLECTION_NAME
+         collection_name=settings.require_qdrant_collection_name()
       )
+      await vector_store.ensure_collection(vector_size=embedding_service.dimensions)
 
       cache_store = RedisCacheStore(connection_url=settings.REDIS_URL)
-      db = db_session_maker()
+      db = worker_session_maker()
       agent_credential = await get_by_provider_external_id(db=db, provider=IntegrationProvider.GHL, external_id=location_id)
 
       if not agent_credential:

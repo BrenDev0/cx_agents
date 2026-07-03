@@ -103,8 +103,9 @@ async def test_process_knowledge_marks_failed_and_reraises_when_document_not_fou
     update_status_mock.assert_awaited_once_with(
         db=fake_db, knowledge_id=UUID(knowledge_id), status=KnowledgeStatus.FAILED
     )
-    fake_db.rollback.assert_awaited_once()
-    fake_db.close.assert_awaited_once()
+    # The original (possibly poisoned) session is discarded and a fresh one is
+    # opened for the failure write, so close() is called once for each.
+    assert fake_db.close.await_count == 2
     assert fake_object_store.downloaded_keys == []
 
 

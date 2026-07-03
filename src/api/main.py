@@ -8,8 +8,9 @@ from src.db.sqlalchemy.core import db_session_maker
 from src.db.sqlalchemy.middleware import DbSessionMiddleware
 from src.cryptography.services import DefaultCryptographyService
 from src.cryptography.encryption import encrypt, decrypt
-from src.cryptography.hashing import deterministic_hash, hash_password, verify_password
+from src.cryptography.hashing import deterministic_hash, hash_token, hash_password, verify_password
 from src.object_storage.aws.object_store import AwsObjectStore
+from src.embeddings.openai.service import OpenaiEmbeddingService
 from src.vector_store.qdrant.vector_store import QdrantVectorStore
 from src.settings import settings
 from .router import router as api_router
@@ -27,7 +28,8 @@ async def lifespan(app: FastAPI):
         decrypt=decrypt,
         hash_password=hash_password,
         verify_password=verify_password,
-        deterministic_hash=deterministic_hash
+        deterministic_hash=deterministic_hash,
+        hash_token=hash_token
     )
     app.state.cryptography = cryptography_service
 
@@ -38,17 +40,20 @@ async def lifespan(app: FastAPI):
     )
 
     app.state.object_store = AwsObjectStore(
-        bucket_name=settings.require_aws_bucket_name(),
-        aws_access_key_id=settings.require_aws_access_key_id(),
-        aws_secret_access_key=settings.require_aws_secret_access_key(),
-        region_name=settings.require_aws_region_name(),
-        endpoint=settings.require_bucket_endpoint()
+        bucket_name=settings.AWS_BUCKET_NAME,
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=settings.AWS_REGION_NAME,
+        endpoint=settings.BUCKET_ENDPOINT
     )
 
     vector_store = QdrantVectorStore(
-        url=settings.QDRANT_URL,
+        url=settings.require_qdrant_url(),
         api_key=settings.QDRANT_API_KEY,
-        collection_name=settings.QDRANT_COLLECTION_NAME
+        collection_name=settings.require_qdrant_collection_name()
+    )
+    await vector_store.ensure_collection(
+        vector_size=OpenaiEmbeddingService(api_key=settings.OPENAI_API_KEY).dimensions
     )
     app.state.vector_store = vector_store
 

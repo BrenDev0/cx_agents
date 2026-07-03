@@ -19,6 +19,7 @@ class FakeObjectStore:
 class FakeEmbeddingService:
     def __init__(self, **kwargs):
         self.embed_chunks_calls: list[tuple[list[str], dict]] = []
+        self.dimensions = 3072
 
     async def embed_chunks(self, texts: list[str], metadata=None) -> EmbeddingResult:
         self.embed_chunks_calls.append((texts, metadata))
@@ -32,7 +33,11 @@ class FakeKnowledgeVectorStore:
     def __init__(self, **kwargs):
         self.deleted_filters: list[dict] = []
         self.upserted_results: list[EmbeddingResult] = []
+        self.ensured_vector_sizes: list[int] = []
         self.closed = False
+
+    async def ensure_collection(self, vector_size: int, **kwargs) -> None:
+        self.ensured_vector_sizes.append(vector_size)
 
     async def delete_by_filter(self, filter: dict) -> bool:
         self.deleted_filters.append(filter)
@@ -69,5 +74,5 @@ def fake_vector_store(monkeypatch) -> FakeKnowledgeVectorStore:
 @pytest.fixture
 def fake_db(monkeypatch) -> AsyncMock:
     db = AsyncMock()
-    monkeypatch.setattr("src.knowledge_base.celery.tasks.db_session_maker", lambda: db)
+    monkeypatch.setattr("src.knowledge_base.celery.tasks.worker_session_maker", lambda: db)
     return db

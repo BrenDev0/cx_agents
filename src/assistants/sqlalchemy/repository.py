@@ -1,5 +1,5 @@
-from sqlalchemy import select, delete
-from uuid import UUID 
+from sqlalchemy import select, delete, update
+from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..models import Assistant, AssistantCreate
 from .mappers import row_to_domain, domain_create_to_row
@@ -39,6 +39,22 @@ async def delete_by_id(db: AsyncSession, assistant_id: UUID, user_id: UUID) -> A
     stmt = delete(AssistantRow).where(AssistantRow.id == assistant_id).where(AssistantRow.user_id == user_id).returning(AssistantRow)
 
     result  = await db.execute(stmt)
+
+    row = result.scalar_one_or_none()
+
+    return row_to_domain(row) if row else None
+
+
+async def update_webhook_secret_hash(db: AsyncSession, assistant_id: UUID, user_id: UUID, webhook_secret_hash: str) -> Assistant | None:
+    stmt = (
+        update(AssistantRow)
+        .where(AssistantRow.id == assistant_id)
+        .where(AssistantRow.user_id == user_id)
+        .values(webhook_secret_hash=webhook_secret_hash)
+        .returning(AssistantRow)
+    )
+
+    result = await db.execute(stmt)
 
     row = result.scalar_one_or_none()
 
