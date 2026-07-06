@@ -1,4 +1,6 @@
 import httpx
+from src.exceptions import BadRequestException
+from src.types import ChatMessage, MessageRole
 
 class GHLConversationsClient:
     def __init__(
@@ -29,5 +31,70 @@ class GHLConversationsClient:
         )
         response.raise_for_status()
         return response.json()
+    
+
+    async def _get_chat_id(self, contact_id: str, incoming_message: str) -> str:
+        params = httpx.QueryParams(
+            contactId=contact_id,
+            query=incoming_message,
+            limit=1
+        )
+
+        response = await self._http.get(
+            "/conversations/search",
+            params=params,
+            headers=self._headers,
+        )
+        response.raise_for_status()
+
+        conversations = response.json().get("conversations")
+        if not conversations or not isinstance(conversations, list):
+            raise ValueError("Invalid response format from get conversations")
+
+        return conversations[0].get("id")
 
 
+    async def get_chat_history(
+        self,
+        contact_id: str,
+        incoming_message: str,
+        channel: str,
+        limit: int = 5
+    ) -> list[ChatMessage]:
+        conversation_id = await self._get_chat_id(contact_id=contact_id, incoming_message=incoming_message)
+
+        if not conversation_id:
+            raise BadRequestException("No conversation found")
+
+        params = httpx.QueryParams(
+            limit=limit,
+            type=channel
+        )
+
+        response = await self._http.get(
+            f"/conversations/{conversation_id}/messages",
+            params=params,
+            headers=self._headers
+        )
+
+        response.raise_for_status()
+
+        data = response.json().get("messages")
+        if not data:
+            raise ValueError("Message response not valid")
+
+        messages = data.get("messages")
+
+        if not messages or not isinstance(messages, list):
+            raise ValueError("invalid response from get messages")
+
+        chat_history = [
+            ChatMessage(
+                id=message["id"],
+                role=MessageRole.AI if message["direction"] == "outbound" else MessageRole.HUMAN,
+                content=message["body"]
+            )
+            for message in messages
+        ]
+
+        return chat_history

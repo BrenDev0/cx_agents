@@ -8,5 +8,6 @@ class MessageRole(StrEnum):
     AI = "assistant"
 
 class ChatMessage(TypedDict):
+    id: str
     role: MessageRole
     content: str
