@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 from sqlalchemy import String, UUID, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from src.db.sqlalchemy.models import Base, TimeStampMixin, IdMixin

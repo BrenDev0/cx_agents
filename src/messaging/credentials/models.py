@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 class MessagingChannel(StrEnum):
-    SMS ="sms"
-    WHATSAPP = "whatsapp",
+    SMS = "sms"
+    WHATSAPP = "whatsapp"
     MESSENGER = "messenger"
 
 @dataclass(frozen=True)
