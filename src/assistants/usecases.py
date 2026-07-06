@@ -5,9 +5,9 @@ from src.cryptography.types import HashTokenFn
 from src.exceptions import NotFoundException
 
 from .models import AssistantCreate
-from .schemas import AssistantCreateRequest
-from .types import CreateAssistantFn, UpdateAssistantWebhookSecretHashFn
-from .mappers import domain_to_webhook_secret_schema
+from .schemas import AssistantCreateRequest, AssistantResponse
+from .types import CreateAssistantFn, DeleteAssistantById, GetUsersAssistantsFn, UpdateAssistantWebhookSecretHashFn
+from .mappers import domain_to_public_schema, domain_to_webhook_secret_schema
 from .assistant_settings.models import AssistantSettingCreate
 from .assistant_settings.types import CreateAssistantSettingFn
 
@@ -35,6 +35,15 @@ async def handle_create(
     return domain_to_webhook_secret_schema(new_assistant, webhook_secret=webhook_secret)
 
 
+async def handle_list_assistants(
+    user_id: UUID,
+    get_users_assistants: GetUsersAssistantsFn
+) -> list[AssistantResponse]:
+    assistants = await get_users_assistants(user_id)
+
+    return [domain_to_public_schema(assistant) for assistant in assistants]
+
+
 async def handle_rotate_webhook_secret(
     assistant_id: UUID,
     user_id: UUID,
@@ -53,3 +62,14 @@ async def handle_rotate_webhook_secret(
         raise NotFoundException("Assistant not found")
 
     return domain_to_webhook_secret_schema(updated_assistant, webhook_secret=webhook_secret)
+
+
+async def handle_delete_assistant(
+    assistant_id: UUID,
+    user_id: UUID,
+    delete_assistant_by_id: DeleteAssistantById
+) -> None:
+    deleted_assistant = await delete_assistant_by_id(assistant_id=assistant_id, user_id=user_id)
+
+    if not deleted_assistant:
+        raise NotFoundException("Assistant not found")

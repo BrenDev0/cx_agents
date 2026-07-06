@@ -3,11 +3,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 
 from src.db.sqlalchemy.dependencies import get_db_session
-from .repository import create, get_by_id, get_by_assistant_and_document, update_status, delete_by_id
+from .repository import (
+    create,
+    get_by_id,
+    get_by_assistant_and_document,
+    collection_by_assistant_id,
+    update_status,
+    delete_by_id
+)
 from ..types import (
     CreateKnowledgeFn,
     GetKnowledgeByIdFn,
     GetKnowledgeByAssistantAndDocumentFn,
+    GetKnowledgeByAssistantIdFn,
     UpdateKnowledgeStatusFn,
     DeleteKnowledgeByIdFn
 )
@@ -35,6 +43,13 @@ def provide_get_knowledge_by_assistant_and_document(
         return await get_by_assistant_and_document(db=db, assistant_id=assistant_id, document_id=document_id)
 
     return get_knowledge_by_assistant_and_document
+
+
+def provide_get_knowledge_by_assistant_id(db: AsyncSession = Depends(get_db_session)) -> GetKnowledgeByAssistantIdFn:
+    async def get_knowledge_by_assistant_id(assistant_id: UUID) -> list[Knowledge]:
+        return await collection_by_assistant_id(db=db, assistant_id=assistant_id)
+
+    return get_knowledge_by_assistant_id
 
 
 def provide_update_knowledge_status(db: AsyncSession = Depends(get_db_session)) -> UpdateKnowledgeStatusFn:

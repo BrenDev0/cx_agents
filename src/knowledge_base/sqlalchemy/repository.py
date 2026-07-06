@@ -37,6 +37,16 @@ async def get_by_assistant_and_document(db: AsyncSession, assistant_id: UUID, do
     return row_to_domain(row) if row else None
 
 
+async def collection_by_assistant_id(db: AsyncSession, assistant_id: UUID) -> list[Knowledge]:
+    stmt = select(KnowledgeRow).where(KnowledgeRow.assistant_id == assistant_id)
+
+    result = await db.execute(stmt)
+
+    rows = result.scalars().all()
+
+    return list(row_to_domain(row) for row in rows)
+
+
 async def update_status(db: AsyncSession, knowledge_id: UUID, status: KnowledgeStatus) -> Knowledge | None:
     stmt = (
         update(KnowledgeRow)

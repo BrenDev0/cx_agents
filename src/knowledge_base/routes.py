@@ -12,16 +12,18 @@ from .schemas import KnowledgeCreateRequest, KnowledgeResponse
 from .types import (
     CreateKnowledgeFn,
     GetKnowledgeByAssistantAndDocumentFn,
+    GetKnowledgeByAssistantIdFn,
     GetKnowledgeByIdFn,
     UpdateKnowledgeStatusFn
 )
 from .sqlalchemy.dependencies import (
     provide_create_knowledge,
     provide_get_knowledge_by_assistant_and_document,
+    provide_get_knowledge_by_assistant_id,
     provide_get_knowledge_by_id,
     provide_update_knowledge_status
 )
-from .usecases import handle_create_knowledge, handle_retry_knowledge
+from .usecases import handle_create_knowledge, handle_list_assistant_knowledge, handle_retry_knowledge
 
 router = APIRouter(
     tags=["Knowledge Base"]
@@ -45,6 +47,21 @@ async def knowledge_create(
         get_assistant_by_id=get_assistant_by_id,
         get_knowledge_by_assistant_and_document=get_knowledge_by_assistant_and_document,
         create_knowledge=create_knowledge
+    )
+
+
+@router.get("/assistant/{assistant_id}", response_model=list[KnowledgeResponse])
+async def knowledge_list_by_assistant(
+    assistant_id: UUID,
+    current_user: User = Depends(get_current_user),
+    get_assistant_by_id: GetAssistantByIdFn = Depends(provide_get_assistant_by_id),
+    get_knowledge_by_assistant_id: GetKnowledgeByAssistantIdFn = Depends(provide_get_knowledge_by_assistant_id)
+):
+    return await handle_list_assistant_knowledge(
+        assistant_id=assistant_id,
+        user_id=current_user.id,
+        get_assistant_by_id=get_assistant_by_id,
+        get_knowledge_by_assistant_id=get_knowledge_by_assistant_id
     )
 
 

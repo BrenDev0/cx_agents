@@ -8,6 +8,7 @@ from .models import KnowledgeCreate, KnowledgeStatus
 from .schemas import KnowledgeResponse
 from .types import (
     GetKnowledgeByAssistantAndDocumentFn,
+    GetKnowledgeByAssistantIdFn,
     CreateKnowledgeFn,
     GetKnowledgeByIdFn,
     UpdateKnowledgeStatusFn
@@ -57,6 +58,21 @@ async def handle_create_knowledge(
     )
 
     return domain_to_public_schema(knowledge)
+
+
+async def handle_list_assistant_knowledge(
+    assistant_id: UUID,
+    user_id: UUID,
+    get_assistant_by_id: GetAssistantByIdFn,
+    get_knowledge_by_assistant_id: GetKnowledgeByAssistantIdFn
+) -> list[KnowledgeResponse]:
+    assistant = await get_assistant_by_id(assistant_id=assistant_id, user_id=user_id)
+    if not assistant:
+        raise NotFoundException("Assistant not found")
+
+    knowledge_entries = await get_knowledge_by_assistant_id(assistant_id=assistant_id)
+
+    return [domain_to_public_schema(knowledge) for knowledge in knowledge_entries]
 
 
 async def handle_retry_knowledge(

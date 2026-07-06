@@ -8,7 +8,7 @@ from src.assistants.models import Assistant
 from src.documents.models import Document
 from src.exceptions import BadRequestException, ConflictException, NotFoundException
 from src.knowledge_base.models import Knowledge, KnowledgeCreate, KnowledgeStatus
-from src.knowledge_base.usecases import handle_create_knowledge
+from src.knowledge_base.usecases import handle_create_knowledge, handle_list_assistant_knowledge
 
 
 def make_document(**overrides) -> Document:
@@ -158,6 +158,81 @@ async def test_handle_create_knowledge_raises_when_assistant_not_found(mock_dela
         )
 
     mock_delay.assert_not_called()
+
+
+def make_knowledge(**overrides) -> Knowledge:
+    defaults = dict(
+        id=uuid4(),
+        assistant_id=uuid4(),
+        document_id=uuid4(),
+        status=KnowledgeStatus.READY,
+        created_at=datetime.now(timezone.utc)
+    )
+    defaults.update(overrides)
+    return Knowledge(**defaults)
+
+
+async def test_handle_list_assistant_knowledge_returns_mapped_responses():
+    user_id = uuid4()
+    assistant = make_assistant(user_id=user_id)
+    knowledge_entries = [
+        make_knowledge(assistant_id=assistant.id),
+        make_knowledge(assistant_id=assistant.id)
+    ]
+
+    async def fake_get_assistant_by_id(assistant_id, user_id):
+        assert assistant_id == assistant.id
+        return assistant
+
+    async def fake_get_knowledge_by_assistant_id(assistant_id):
+        assert assistant_id == assistant.id
+        return knowledge_entries
+
+    response = await handle_list_assistant_knowledge(
+        assistant_id=assistant.id,
+        user_id=user_id,
+        get_assistant_by_id=fake_get_assistant_by_id,
+        get_knowledge_by_assistant_id=fake_get_knowledge_by_assistant_id
+    )
+
+    assert [r.id for r in response] == [k.id for k in knowledge_entries]
+    assert all(r.assistant_id == assistant.id for r in response)
+
+
+async def test_handle_list_assistant_knowledge_returns_empty_list_when_none_exist():
+    user_id = uuid4()
+    assistant = make_assistant(user_id=user_id)
+
+    async def fake_get_assistant_by_id(assistant_id, user_id):
+        return assistant
+
+    async def fake_get_knowledge_by_assistant_id(assistant_id):
+        return []
+
+    response = await handle_list_assistant_knowledge(
+        assistant_id=assistant.id,
+        user_id=user_id,
+        get_assistant_by_id=fake_get_assistant_by_id,
+        get_knowledge_by_assistant_id=fake_get_knowledge_by_assistant_id
+    )
+
+    assert response == []
+
+
+async def test_handle_list_assistant_knowledge_raises_when_assistant_not_owned():
+    async def fake_get_assistant_by_id(assistant_id, user_id):
+        return None
+
+    async def unexpected(*args, **kwargs):
+        raise AssertionError("should not fetch knowledge when assistant ownership fails")
+
+    with pytest.raises(NotFoundException):
+        await handle_list_assistant_knowledge(
+            assistant_id=uuid4(),
+            user_id=uuid4(),
+            get_assistant_by_id=fake_get_assistant_by_id,
+            get_knowledge_by_assistant_id=unexpected
+        )
 
 
 async def test_handle_create_knowledge_raises_when_already_in_knowledge_base(mock_delay: Mock):

@@ -14,6 +14,10 @@ class GetKnowledgeByAssistantAndDocumentFn(Protocol):
     async def __call__(self, assistant_id: UUID, document_id: UUID) -> Knowledge | None: ...
 
 
+class GetKnowledgeByAssistantIdFn(Protocol):
+    async def __call__(self, assistant_id: UUID) -> list[Knowledge]: ...
+
+
 class UpdateKnowledgeStatusFn(Protocol):
     async def __call__(self, knowledge_id: UUID, status: KnowledgeStatus) -> Knowledge | None: ...
 

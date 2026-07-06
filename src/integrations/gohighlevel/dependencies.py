@@ -5,8 +5,6 @@ import logging
 
 from src.cryptography.dependencies import get_cryptography_service
 from src.cryptography.types import CryptographyService
-from src.credentials.sqlalchemy.dependencies import get_agent_credential
-from src.credentials.models import Credential
 
 from .client import GoHighLevelClient
 from ..types import ConversationClient
@@ -26,7 +24,7 @@ def get_ghl_http(
 
 def get_ghl_client(
     http: AsyncClient = Depends(get_ghl_http),
-    credential: Credential = Depends(get_agent_credential),
+    credential = "",
     cryptography_service: CryptographyService = Depends(get_cryptography_service)
 ):
     payload = json.loads(cryptography_service.decrypt(credential.payload))
