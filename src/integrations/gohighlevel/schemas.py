@@ -7,3 +7,4 @@ class GHLChatRequest(BaseModel):
     contact_id: str
     channel: MessagingChannel
     incoming_message: str
+    location_id: str

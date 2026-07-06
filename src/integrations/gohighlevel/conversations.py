@@ -1,7 +1,17 @@
 import httpx
+import logging
 from src.exceptions import BadRequestException
 from src.types import ChatMessage, MessageRole
 
+ghl_channel_map = {
+    "whatsapp": "TYPE_WHATSAPP"
+}
+
+ghl_message_type = {
+    "whatsapp": "WhatsApp"
+}
+
+logger = logging.getLogger(__name__)
 class GHLConversationsClient:
     def __init__(
         self,
@@ -17,8 +27,9 @@ class GHLConversationsClient:
         contact_id: str,
         message: str
     ):
+    
         body = {
-            "type": channel,
+            "type": ghl_message_type[channel],
             "contactId": contact_id,
             "message": message,
             "status": "delivered"
@@ -33,9 +44,10 @@ class GHLConversationsClient:
         return response.json()
     
 
-    async def _get_chat_id(self, contact_id: str, incoming_message: str) -> str:
+    async def _get_chat_id(self, contact_id: str, incoming_message: str, location_id: str) -> str:
         params = httpx.QueryParams(
             contactId=contact_id,
+            locationId=location_id,
             query=incoming_message,
             limit=1
         )
@@ -58,17 +70,18 @@ class GHLConversationsClient:
         self,
         contact_id: str,
         incoming_message: str,
+        location_id: str,
         channel: str,
         limit: int = 5
     ) -> list[ChatMessage]:
-        conversation_id = await self._get_chat_id(contact_id=contact_id, incoming_message=incoming_message)
+        conversation_id = await self._get_chat_id(contact_id=contact_id, incoming_message=incoming_message, location_id=location_id)
 
         if not conversation_id:
             raise BadRequestException("No conversation found")
 
         params = httpx.QueryParams(
             limit=limit,
-            type=channel
+            type=ghl_channel_map[channel]
         )
 
         response = await self._http.get(

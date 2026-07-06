@@ -115,6 +115,7 @@ async def get_chat_history(
 
     return await conversations_client.get_chat_history(
         contact_id=data.contact_id,
+        location_id=data.location_id,
         incoming_message=data.incoming_message,
         channel=data.channel
     )
