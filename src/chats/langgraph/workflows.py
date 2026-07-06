@@ -66,7 +66,10 @@ def compile_chat_workflow(
 
     async def rag_workflow(state: ChatState):
         rag_state: RagState = {
+            "assistant_id": state["assistant_id"],
             "contact_id": state["contact_id"],
+            "channel": state["channel"],
+            "credential": state["credential"],
             "incoming_message": state["incoming_message"],
             "chat_history": state.get("chat_history", [])
         }

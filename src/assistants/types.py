@@ -9,6 +9,10 @@ class GetAssistantByIdFn(Protocol):
     async def __call__(self, assistant_id: UUID, user_id: UUID) -> Assistant | None: ...
 
 
+class GetAssistantByWebhookIdFn(Protocol):
+    async def __call__(self, webhook_id: UUID) -> Assistant | None: ...
+
+
 class DeleteAssistantById(Protocol):
     async def __call__(self, assistant_id: UUID, user_id: UUID) -> Assistant | None: ...
 

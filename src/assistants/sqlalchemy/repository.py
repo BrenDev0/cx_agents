@@ -25,6 +25,16 @@ async def get_by_id(db: AsyncSession, assistant_id: UUID, user_id: UUID) -> Assi
     return row_to_domain(row) if row else None
 
 
+async def get_by_webhook_id(db: AsyncSession, webhook_id: UUID) -> Assistant | None:
+    stmt = select(AssistantRow).where(AssistantRow.webhook_id == webhook_id)
+
+    result = await db.execute(stmt)
+
+    row = result.scalar_one_or_none()
+
+    return row_to_domain(row) if row else None
+
+
 async def collection_by_user_id(db: AsyncSession, user_id: UUID) -> list[Assistant]:
     stmt = select(AssistantRow).where(AssistantRow.user_id == user_id)
 

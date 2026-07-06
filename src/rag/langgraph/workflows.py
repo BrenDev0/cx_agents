@@ -44,7 +44,8 @@ def compile_rag_workflow(
         try:
             chunks = await vector_store.query(
                 embedding=state["embedded_query"],
-                top_k=5
+                top_k=5,
+                filter={"assistant_id": state["assistant_id"]}
             )
             return {"retrieved_context": format_retrieved_context(chunks)}
 
