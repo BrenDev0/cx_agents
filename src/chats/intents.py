@@ -101,5 +101,6 @@ def build_intent_classifier_prompt(intent_options: str) -> str:
     - Do not mention routing, classification, tools, agents, or workflows to the user.
     - Keep context factual and grounded in the conversation.
     - Keep instructions short and actionable.
-    - If the message is unclear, choose fallback and explain what needs clarification in instructions.
+    - Choose fallback only when you cannot tell which category the message belongs to (casual conversation vs. business/product question vs. appointment request).
+    - If the message is clearly a business, product, service, pricing, or policy question but lacks a specific detail (e.g., which product or service), still choose rag instead of fallback. Note the missing detail in instructions so the next agent can ask for it if the retrieved information does not resolve it.
     """

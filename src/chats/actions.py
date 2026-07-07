@@ -135,7 +135,7 @@ async def send_reply(
         message=message
     )
 
-    return response["id"]
+    return response["messageId"]
 
 
 async def cache_outgoing_message_id(

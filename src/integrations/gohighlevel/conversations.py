@@ -44,11 +44,10 @@ class GHLConversationsClient:
         return response.json()
     
 
-    async def _get_chat_id(self, contact_id: str, incoming_message: str, location_id: str) -> str:
+    async def _get_chat_id(self, contact_id: str, location_id: str) -> str:
         params = httpx.QueryParams(
             contactId=contact_id,
             locationId=location_id,
-            query=incoming_message,
             limit=1
         )
 
@@ -69,12 +68,11 @@ class GHLConversationsClient:
     async def get_chat_history(
         self,
         contact_id: str,
-        incoming_message: str,
         location_id: str,
         channel: str,
         limit: int = 5
     ) -> list[ChatMessage]:
-        conversation_id = await self._get_chat_id(contact_id=contact_id, incoming_message=incoming_message, location_id=location_id)
+        conversation_id = await self._get_chat_id(contact_id=contact_id, location_id=location_id)
 
         if not conversation_id:
             raise BadRequestException("No conversation found")

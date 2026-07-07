@@ -77,9 +77,6 @@ def compile_chat_workflow(
         if state.get("next_agent_context"):
             rag_state["next_agent_context"] = state["next_agent_context"]
 
-        if state.get("next_agent_instructions"):
-            rag_state["next_agent_instructions"] = state["next_agent_instructions"]
-
         workflow = compile_rag_workflow(llm=llm, embedding_service=embedding_service, vector_store=vector_store)
 
         final_rag_state = await workflow.ainvoke(rag_state)
