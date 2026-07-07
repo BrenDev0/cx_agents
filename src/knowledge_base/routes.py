@@ -7,6 +7,8 @@ from src.documents.types import GetDocumentByIdFn
 from src.documents.sqlalchemy.dependencies import provide_get_document_by_id
 from src.assistants.types import GetAssistantByIdFn
 from src.assistants.sqlalchemy.dependencies import provide_get_assistant_by_id
+from src.vector_store.types import VectorStore
+from src.vector_store.dependencies import get_vector_store
 
 from .schemas import KnowledgeCreateRequest, KnowledgeResponse
 from .types import (
@@ -14,16 +16,23 @@ from .types import (
     GetKnowledgeByAssistantAndDocumentFn,
     GetKnowledgeByAssistantIdFn,
     GetKnowledgeByIdFn,
-    UpdateKnowledgeStatusFn
+    UpdateKnowledgeStatusFn,
+    DeleteKnowledgeByIdFn
 )
 from .sqlalchemy.dependencies import (
     provide_create_knowledge,
     provide_get_knowledge_by_assistant_and_document,
     provide_get_knowledge_by_assistant_id,
     provide_get_knowledge_by_id,
-    provide_update_knowledge_status
+    provide_update_knowledge_status,
+    provide_delete_knowledge_by_id
 )
-from .usecases import handle_create_knowledge, handle_list_assistant_knowledge, handle_retry_knowledge
+from .usecases import (
+    handle_create_knowledge,
+    handle_list_assistant_knowledge,
+    handle_retry_knowledge,
+    handle_delete_knowledge
+)
 
 router = APIRouter(
     tags=["Knowledge Base"]
@@ -79,4 +88,23 @@ async def knowledge_retry(
         get_knowledge_by_id=get_knowledge_by_id,
         get_assistant_by_id=get_assistant_by_id,
         update_knowledge_status=update_knowledge_status
+    )
+
+
+@router.delete("/{knowledge_id}", status_code=204)
+async def knowledge_delete(
+    knowledge_id: UUID,
+    current_user: User = Depends(get_current_user),
+    vector_store: VectorStore = Depends(get_vector_store),
+    get_knowledge_by_id: GetKnowledgeByIdFn = Depends(provide_get_knowledge_by_id),
+    get_assistant_by_id: GetAssistantByIdFn = Depends(provide_get_assistant_by_id),
+    delete_knowledge_by_id: DeleteKnowledgeByIdFn = Depends(provide_delete_knowledge_by_id)
+):
+    await handle_delete_knowledge(
+        knowledge_id=knowledge_id,
+        user_id=current_user.id,
+        vector_store=vector_store,
+        get_knowledge_by_id=get_knowledge_by_id,
+        get_assistant_by_id=get_assistant_by_id,
+        delete_knowledge_by_id=delete_knowledge_by_id
     )

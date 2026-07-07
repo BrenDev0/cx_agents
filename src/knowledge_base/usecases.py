@@ -2,6 +2,7 @@ from uuid import UUID
 
 from src.documents.types import GetDocumentByIdFn
 from src.assistants.types import GetAssistantByIdFn
+from src.vector_store.types import VectorStore
 from src.exceptions import NotFoundException, ConflictException, BadRequestException
 
 from .models import KnowledgeCreate, KnowledgeStatus
@@ -11,7 +12,8 @@ from .types import (
     GetKnowledgeByAssistantIdFn,
     CreateKnowledgeFn,
     GetKnowledgeByIdFn,
-    UpdateKnowledgeStatusFn
+    UpdateKnowledgeStatusFn,
+    DeleteKnowledgeByIdFn
 )
 from .mappers import domain_to_public_schema
 from .celery.tasks import add_document_to_knowledge_base
@@ -111,3 +113,32 @@ async def handle_retry_knowledge(
     )
 
     return domain_to_public_schema(updated_knowledge)
+
+
+async def handle_delete_knowledge(
+    knowledge_id: UUID,
+    user_id: UUID,
+    vector_store: VectorStore,
+    get_knowledge_by_id: GetKnowledgeByIdFn,
+    get_assistant_by_id: GetAssistantByIdFn,
+    delete_knowledge_by_id: DeleteKnowledgeByIdFn
+) -> None:
+    knowledge = await get_knowledge_by_id(knowledge_id=knowledge_id)
+    if not knowledge:
+        raise NotFoundException("Knowledge not found")
+
+    assistant = await get_assistant_by_id(assistant_id=knowledge.assistant_id, user_id=user_id)
+    if not assistant:
+        raise NotFoundException("Assistant not found")
+
+    deleted_knowledge = await delete_knowledge_by_id(knowledge_id=knowledge_id, assistant_id=knowledge.assistant_id)
+    if not deleted_knowledge:
+        raise NotFoundException("Knowledge not found")
+
+    try:
+        await vector_store.delete_by_filter({
+            "assistant_id": str(knowledge.assistant_id),
+            "document_id": str(knowledge.document_id)
+        })
+    except Exception as e:
+        raise RuntimeError(f"Failed to delete vectors for knowledge '{knowledge_id}'") from e
