@@ -8,6 +8,8 @@ def row_to_domain(row: CalendarRow) -> Calendar:
         assistant_id=row.assistant_id,
         calendar_id=row.calendar_id,
         timezone=row.timezone,
+        required_fields=row.required_fields,
+        title_template=row.title_template,
         updated_at=row.updated_at,
         created_at=row.created_at
     )

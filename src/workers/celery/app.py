@@ -8,7 +8,7 @@ worker = Celery(
     "cx_agents",
     broker=url,
     include=[
-        "src.chats.celery.tasks",
+        "src.integrations.gohighlevel.celery.tasks",
         "src.knowledge_base.celery.tasks"
     ]
 )

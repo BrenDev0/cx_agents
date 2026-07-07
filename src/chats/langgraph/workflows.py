@@ -3,7 +3,9 @@ from langgraph.graph import StateGraph, START, END
 
 from src.rag.state import RagState
 from src.rag.langgraph.workflows import compile_rag_workflow
-from src.integrations.types import ConversationClient
+from src.appointments.state import AppointmentsState
+from src.appointments.langgraph.workflows import compile_appointments_workflow
+from src.integrations.types import ConversationClient, AppointmentsBookingClient
 from src.cache.types import CacheStore
 from src.llm.types import Agent
 from src.embeddings.types import EmbeddingService
@@ -24,6 +26,7 @@ def compile_chat_workflow(
     llm: Agent,
     cache_store: CacheStore,
     conversation_client: ConversationClient,
+    appointments_client: AppointmentsBookingClient,
     embedding_service: EmbeddingService,
     vector_store: VectorStore
 ):
@@ -100,7 +103,49 @@ def compile_chat_workflow(
 
 
     async def appointments_workflow(state: ChatState):
-        return {}
+        appointments_state: AppointmentsState = {
+            "assistant_id": state["assistant_id"],
+            "contact_id": state["contact_id"],
+            "channel": state["channel"],
+            "credential": state["credential"],
+            "incoming_message": state["incoming_message"],
+            "chat_history": state.get("chat_history", [])
+        }
+
+        if state.get("next_agent_context"):
+            appointments_state["next_agent_context"] = state["next_agent_context"]
+
+        if state.get("next_agent_instructions"):
+            appointments_state["next_agent_instructions"] = state["next_agent_instructions"]
+
+        workflow = compile_appointments_workflow(
+            llm=llm,
+            appointments_client=appointments_client,
+            cache_store=cache_store,
+            calendar_id=state.get("calendar_id"),
+            timezone=state.get("timezone"),
+            required_fields=state.get("required_fields"),
+            title_template=state.get("title_template")
+        )
+
+        final_appointments_state = await workflow.ainvoke(appointments_state)
+
+        final_response = final_appointments_state.get("generated_reply")
+
+        if not final_response:
+            errors = state.get("errors", [])
+            errors.append("Appointments workflow did not generate a response")
+            return {"errors": errors}
+
+        if final_appointments_state.get("errors"):
+            errors = state.get("errors", [])
+            errors.extend(final_appointments_state["errors"])
+            return {
+                "errors": errors,
+                "final_response": final_response,
+            }
+
+        return {"final_response": final_response}
 
 
     async def plain_llm_node(state: ChatState):

@@ -20,6 +20,8 @@ from src.exceptions import NotFoundException, UnauthorizedException
 from src.messaging.credentials.types import GetMessagingCredentialByAssistantAndChannelFn
 from src.messaging.credentials.sqlalchemy.dependencies import provide_get_messaging_credential_by_assistant_and_channel
 from src.chats.mappers import cache_dict_to_domain, domain_to_cache_dict
+from src.calendars.types import GetCalendarByAssistantIdFn
+from src.calendars.sqlalchemy.dependencies import provide_get_calendar_by_assistant_id
 
 from .client import GoHighLevelClient
 from .conversations import GHLConversationsClient
@@ -41,8 +43,8 @@ def get_ghl_http(
     return http
 
 
-def get_ghl_conversations_client(http: AsyncClient, access_token: str) -> GHLConversationsClient:
-    return GoHighLevelClient(http=http, pit=access_token).conversations
+def get_ghl_conversations_client(http: AsyncClient, access_token: str, location_id: str) -> GHLConversationsClient:
+    return GoHighLevelClient(http=http, pit=access_token, location_id=location_id).conversations
 
 
 async def get_chat_context(
@@ -57,6 +59,7 @@ async def get_chat_context(
     get_assistant_setting_by_assistant_id: GetAssistantSettingByAssistantIdFn = Depends(
         provide_get_assistant_setting_by_assistant_id
     ),
+    get_calendar_by_assistant_id: GetCalendarByAssistantIdFn = Depends(provide_get_calendar_by_assistant_id),
     cryptography: CryptographyService = Depends(get_cryptography_service)
 ) -> ChatContext:
     cache_key = get_chat_context_key(webhook_id=str(webhook_id), channel=data.channel)
@@ -83,12 +86,18 @@ async def get_chat_context(
         if not assistant_setting:
             raise NotFoundException("Assistant setting not found")
 
+        calendar = await get_calendar_by_assistant_id(assistant.id)
+
         chat_context = ChatContext(
             assistant_id=assistant.id,
             webhook_secret_hash=assistant.webhook_secret_hash,
             credential=credential.credential,
             has_calendar=assistant_setting.has_calendar,
-            has_rag=assistant_setting.has_rag
+            has_rag=assistant_setting.has_rag,
+            calendar_id=calendar.calendar_id if calendar else None,
+            timezone=calendar.timezone if calendar else None,
+            required_fields=calendar.required_fields if calendar else None,
+            title_template=calendar.title_template if calendar else None
         )
 
         await cache_store.store_json(
@@ -110,12 +119,12 @@ async def get_chat_history(
 ) -> list[ChatMessage]:
     conversations_client = get_ghl_conversations_client(
         http=ghl_http,
-        access_token=decrypt(chat_context.credential)
+        access_token=decrypt(chat_context.credential),
+        location_id=data.location_id
     )
 
     return await conversations_client.get_chat_history(
         contact_id=data.contact_id,
-        location_id=data.location_id,
         channel=data.channel
     )
 

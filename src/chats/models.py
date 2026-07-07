@@ -17,3 +17,7 @@ class ChatContext:
     credential: str
     has_calendar: bool
     has_rag: bool
+    calendar_id: str | None
+    timezone: str | None
+    required_fields: list[str] | None
+    title_template: str | None

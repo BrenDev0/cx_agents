@@ -14,7 +14,9 @@ async def handle_update_calendar(
 ) -> CalendarResponse:
     domain_update = CalendarUpdate(
         calendar_id=calendar_in.calendar_id,
-        timezone=calendar_in.timezone
+        timezone=calendar_in.timezone,
+        required_fields=calendar_in.required_fields,
+        title_template=calendar_in.title_template
     )
 
     calendar = await update_calendar_by_assistant_id(

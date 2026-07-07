@@ -5,10 +5,12 @@ class AppointmentsClient:
     def __init__(
         self,
         http: httpx.AsyncClient,
-        headers: dict[str, str]
+        headers: dict[str, str],
+        location_id: str
     ):
         self._http = http
         self._headers = headers
+        self._location_id = location_id
 
 
     async def check_for_existing_appointment(
@@ -70,16 +72,19 @@ class AppointmentsClient:
     async def book(
         self,
         calendar_id: str,
-        location_id: str,
         contact_id: str,
-        start_time: str
+        start_time: str,
+        title: str | None = None
     ):
         body = {
             "calendarId": calendar_id,
-            "locationId": location_id,
+            "locationId": self._location_id,
             "contactId": contact_id,
-            "startTime": start_time   
+            "startTime": start_time
         }
+
+        if title:
+            body["title"] = title
 
         response = await self._http.post(
             url="/calendars/events/appointments",

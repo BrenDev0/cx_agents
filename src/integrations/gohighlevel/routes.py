@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
-from src.chats.usecases import handle_chat
 from src.types import ChatMessage
 from src.chats.models import ChatContext
 from .schemas import GHLChatRequest
 from .dependencies import get_chat_context, get_chat_history
+from .usecases import handle_chat
 
 router = APIRouter(
     tags=["GHL"]
@@ -19,6 +19,7 @@ async def handle_post(
     return await handle_chat(
         channel=data.channel,
         contact_id=data.contact_id,
+        location_id=data.location_id,
         incoming_message=data.incoming_message,
         chat_context=chat_context,
         chat_history=chat_history
