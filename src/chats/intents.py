@@ -11,7 +11,7 @@ class IntentStructure(BaseModel):
     intent: str = Field(
         description=(
             "The selected intent label. Must be exactly one of the available intent labels "
-            "provided in the prompt, such as fallback, plain_llm, rag, or appointments."
+            "provided in the prompt, such as plain_llm, rag, or appointments."
         )
     )
 
@@ -33,9 +33,6 @@ class IntentStructure(BaseModel):
 
 
 INTENT_REGISTRY: dict[str, IntentDefinition] = {
-    "fallback": {
-        "description": "The user's intent is unclear and more information is needed.",
-    },
     "plain_llm": {
         "description": "The user is making casual conversation or asking for a general response that does not require tools or business knowledge.",
     },
@@ -57,7 +54,6 @@ def build_available_intents(
     has_rag: bool
 ) -> dict[str, IntentDefinition]:
     intents = {
-        "fallback": INTENT_REGISTRY["fallback"],
         "plain_llm": INTENT_REGISTRY["plain_llm"]
     }
 
@@ -101,6 +97,7 @@ def build_intent_classifier_prompt(intent_options: str) -> str:
     - Do not mention routing, classification, tools, agents, or workflows to the user.
     - Keep context factual and grounded in the conversation.
     - Keep instructions short and actionable.
-    - Choose fallback only when you cannot tell which category the message belongs to (casual conversation vs. business/product question vs. appointment request).
-    - If the message is clearly a business, product, service, pricing, or policy question but lacks a specific detail (e.g., which product or service), still choose rag instead of fallback. Note the missing detail in instructions so the next agent can ask for it if the retrieved information does not resolve it.
+    - If the message could plausibly be a business, product, service, pricing, or policy question -- even if vague or missing a detail like which product or service -- choose rag over plain_llm. Note the missing detail in instructions so the next agent can ask for it if the retrieved information does not resolve it.
+    - Only choose plain_llm when the message is clearly casual conversation with no plausible business angle.
+    - Always choose the closest matching intent. Never assume a message is unanswerable -- let the chosen agent make that call after it has actually tried.
     """
