@@ -18,6 +18,8 @@ from .sqlalchemy.dependencies import (
 from .usecases import handle_create, handle_delete_assistant, handle_list_assistants, handle_rotate_webhook_secret
 from .assistant_settings.types import CreateAssistantSettingFn
 from .assistant_settings.sqlalchemy.dependencies import provide_create_assistant_setting
+from src.calendars.types import CreateCalendarFn
+from src.calendars.sqlalchemy.dependencies import provide_create_calendar
 
 router = APIRouter(
     tags=["Assistants"]
@@ -30,12 +32,14 @@ async def assistants_create(
     current_user: User = Depends(get_current_user),
     create_assistant: CreateAssistantFn = Depends(provide_create_assistant),
     create_assistant_setting: CreateAssistantSettingFn = Depends(provide_create_assistant_setting),
+    create_calendar: CreateCalendarFn = Depends(provide_create_calendar),
     cryptography: CryptographyService = Depends(get_cryptography_service)
 ):
     return await handle_create(
         assitant_in=data,
         create_assistant=create_assistant,
         create_assistant_setting=create_assistant_setting,
+        create_calendar=create_calendar,
         hash_token=cryptography.hash_token,
         user_id=current_user.id
     )

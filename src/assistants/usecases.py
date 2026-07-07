@@ -10,12 +10,15 @@ from .types import CreateAssistantFn, DeleteAssistantById, GetUsersAssistantsFn,
 from .mappers import domain_to_public_schema, domain_to_webhook_secret_schema
 from .assistant_settings.models import AssistantSettingCreate
 from .assistant_settings.types import CreateAssistantSettingFn
+from src.calendars.models import CalendarCreate
+from src.calendars.types import CreateCalendarFn
 
 
 async def handle_create(
     assitant_in: AssistantCreateRequest,
     create_assistant: CreateAssistantFn,
     create_assistant_setting: CreateAssistantSettingFn,
+    create_calendar: CreateCalendarFn,
     hash_token: HashTokenFn,
     user_id: UUID
 ):
@@ -31,6 +34,7 @@ async def handle_create(
     new_assistant = await create_assistant(domain_create)
 
     await create_assistant_setting(AssistantSettingCreate(assistant_id=new_assistant.id))
+    await create_calendar(CalendarCreate(assistant_id=new_assistant.id))
 
     return domain_to_webhook_secret_schema(new_assistant, webhook_secret=webhook_secret)
 

@@ -1,4 +1,5 @@
 import httpx
+from datetime import datetime, timedelta
 
 class AppointmentsClient:
     def __init__(
@@ -45,8 +46,25 @@ class AppointmentsClient:
         return response.json()
 
         
-    async def check_availability(self):
-        pass
+    async def check_availability(
+        self,
+        calendar_id: str,
+        start_time: str,
+        timezone: str
+    ) -> bool:
+        requested = datetime.fromisoformat(start_time)
+        day_start = requested.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day_start + timedelta(days=1)
+
+        slots = await self.get_slots(
+            calendar_id=calendar_id,
+            start_date=int(day_start.timestamp() * 1000),
+            end_date=int(day_end.timestamp() * 1000),
+            timezone=timezone
+        )
+
+        day_slots = slots.get(day_start.strftime("%Y-%m-%d"), {}).get("slots", [])
+        return start_time in day_slots
 
 
     async def book(
@@ -72,10 +90,37 @@ class AppointmentsClient:
         return response.json()
 
 
-    async def update_appointment(self):
-        pass
+    async def update_appointment(
+        self,
+        appointment_id: str,
+        calendar_id: str,
+        start_time: str
+    ):
+        body = {
+            "calendarId": calendar_id,
+            "startTime": start_time
+        }
+
+        response = await self._http.put(
+            url=f"/calendars/events/appointments/{appointment_id}",
+            headers=self._headers,
+            json=body
+        )
+        response.raise_for_status()
+        return response.json()
 
 
-    async def cancel_appointment(self):
-        pass
+    async def cancel_appointment(
+        self,
+        appointment_id: str
+    ):
+        body = {"appointmentStatus": "cancelled"}
+
+        response = await self._http.put(
+            url=f"/calendars/events/appointments/{appointment_id}",
+            headers=self._headers,
+            json=body
+        )
+        response.raise_for_status()
+        return response.json()
 
